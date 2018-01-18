@@ -25,13 +25,21 @@ public abstract class Sprite extends Entity {
 	public void move(Direction dir) {
 		switch (dir) {
 		case NORTH:
-			setY(getY() - vel);
+			y -= vel;
+			directionFacing = Direction.NORTH;
+			break;
 		case SOUTH:
-			setY(getY() + vel);
+			y += vel;
+			directionFacing = Direction.SOUTH;
+			break;
 		case EAST:
-			setX(getX() + vel);
+			x += vel;
+			directionFacing = Direction.EAST;
+			break;
 		case WEST:
-			setX(getX() - vel);
+			x -= vel;
+			directionFacing = Direction.WEST;
+			break;
 		}
 	}
 

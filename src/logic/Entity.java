@@ -4,7 +4,7 @@ import java.awt.Graphics;
 
 public abstract class Entity {
 	
-	private int x, y, width, height;
+	protected int x, y, width, height;
 
 	public Entity(int x, int y, int width, int height) {
 		this.x = x;
