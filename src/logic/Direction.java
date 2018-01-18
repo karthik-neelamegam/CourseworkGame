@@ -1,5 +1,5 @@
 package logic;
 
 public enum Direction {
-	ANTICLOCKWISE, CLOCKWISE;
+	NORTH, SOUTH, EAST, WEST;
 }

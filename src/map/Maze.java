@@ -8,39 +8,38 @@ import java.util.List;
 import java.util.Stack;
 
 import logic.Entity;
-import logic.Immutable2DArrayList;
 import user_interface.Application;
 
 public class Maze extends Entity {
 
 	private ArrayList<ArrayList<Cell>> cells;
 	private List<Wall> walls;
-	
-	private List<Cell> checkpointCells; //may not need this at all
-	
+		
 	public Maze(int numCellsWide, int numCellsHigh, int x, int y,
-			int maxWidth, int maxHeight, float deadEndProbability,
-			int numCheckpoints, SurfacePicker surfacePicker) {
+			int maxWidth, int maxHeight, double deadEndProbability,
+			int numCheckpoints, int numCheckpointAttempts, SurfacePicker surfacePicker) {
 		super(x, y, numCellsWide
 				* Math.min(maxHeight / numCellsHigh, maxWidth / numCellsWide),
 				numCellsHigh
 						* Math.min(maxHeight / numCellsHigh, maxWidth
 								/ numCellsWide));
 		int cellSide = Math.min(maxHeight / numCellsHigh, maxWidth / numCellsWide);
-		initCellMatrix(numCellsWide, numCellsHigh, cellSide, surfacePicker);
+		cells = initCellMatrix(numCellsWide, numCellsHigh, cellSide, surfacePicker);
 		System.out.println("Cell matrix initialised");
-		generateDepthFirstPerfectMaze();
+		generateDepthFirstPerfectMaze(cells);
 		System.out.println("Generated perfect maze");
-		removeDeadEnds(deadEndProbability);
+		removeDeadEnds(cells, deadEndProbability);
 		System.out.println("Removed dead ends");
-		initWallsList();
+		walls = initWallsList(cells);
 		System.out.println("Physical walls initialised");
-		placeCheckpoints(numCheckpoints);
+		Cell topLeftCell = cells.get(0).get(0);
+		Cell bottomRightCell = cells.get(cells.size()-1).get(cells.get(cells.size()-1).size()-1);
+		placeCheckpoints(cells, topLeftCell, bottomRightCell, numCheckpoints, numCheckpointAttempts);
 		System.out.println("Checkpoints placed");
 	}
 
-	private void initCellMatrix(int numCellsWide, int numCellsHigh, int cellSide, SurfacePicker surfacePicker) {
-		cells = new ArrayList<ArrayList<Cell>>(); 
+	private ArrayList<ArrayList<Cell>> initCellMatrix(int numCellsWide, int numCellsHigh, int cellSide, SurfacePicker surfacePicker) {
+		ArrayList<ArrayList<Cell>> cells = new ArrayList<ArrayList<Cell>>(); 
 		for (int i = 0; i < numCellsWide; i++) {
 			cells.add(new ArrayList<Cell>());
 			for (int j = 0; j < numCellsHigh; j++) {
@@ -57,10 +56,11 @@ public class Maze extends Entity {
 				}
 			}
 		}
+		return cells;
 	}
 
 	// this is graph traversal, cells are nodes, lack of walls are edges
-	private void generateDepthFirstPerfectMaze() {
+	private void generateDepthFirstPerfectMaze(ArrayList<ArrayList<Cell>> cells) {
 		Stack<Cell> stack = new Stack<Cell>();
 		Cell currentCell = cells.get(0).get(0);
 		int unvisitedCells = cells.size() * cells.get(0).size();
@@ -82,10 +82,10 @@ public class Maze extends Entity {
 	}
 	
 	private void generateKruskalPerfectMaze() {
-		
+		//TODO
 	}
 
-	private void removeDeadEnds(float deadEndProbability) {
+	private void removeDeadEnds(ArrayList<ArrayList<Cell>> cells, double deadEndProbability) {
 		List<Cell> cellsList = new ArrayList<Cell>();
 		for (int i = 0; i < cells.size(); i++) {
 			for (int j = 0; j < cells.get(i).size(); j++) {
@@ -104,8 +104,8 @@ public class Maze extends Entity {
 		}
 	}
 
-	private void initWallsList() {
-		walls = new ArrayList<Wall>();
+	private List<Wall> initWallsList(ArrayList<ArrayList<Cell>> cells) {
+		List<Wall> walls = new ArrayList<Wall>();
 		for (int i = 0; i < cells.size(); i++) {
 			for (int j = 0; j < cells.get(i).size(); j++) {
 				Cell currentCell = cells.get(i).get(j);
@@ -123,42 +123,21 @@ public class Maze extends Entity {
 				}
 			}
 		}
+		return walls;
 	}
 
 	//REMEMBER TO MAKE START AND END CHECKPOINTS AS WELL!!!
-	private void placeCheckpoints(int numCheckpoints) {
-		final int NUM_ATTEMPTS = 10;
-		checkpointCells = new ArrayList<Cell>();
-		for (int checkpointsPlaced = 0; checkpointsPlaced  < numCheckpoints; checkpointsPlaced ++) {
-			float minTotalSquaredDistance = Float.MAX_VALUE;
-			Cell minCell = null;
-			for (int attempt = 0; attempt < NUM_ATTEMPTS; attempt++) {
-				int x = Application.rng.nextInt(cells.size());
-				int y = Application.rng.nextInt(cells.size());
-				float totalSquaredDistance = 0;
-				Cell candidateCell = cells.get(x).get(y);
-				for(Cell checkpointCell : checkpointCells) {
-					totalSquaredDistance += candidateCell.getEuclideanDistanceBetweenCentres(checkpointCell);
-				}
-				if (totalSquaredDistance < minTotalSquaredDistance) {
-					minTotalSquaredDistance = totalSquaredDistance;
-					minCell = candidateCell;
-				}
-			}
-			Checkpoint checkpoint = new Checkpoint(minCell.getX()+minCell.getWidth()/4, minCell.getY()+minCell.getHeight()/4, minCell.getWidth()/2, minCell.getHeight()/2);
-			minCell.addCheckpoint(checkpoint);
-			checkpointCells.add(minCell);
+	private void placeCheckpoints(ArrayList<ArrayList<Cell>> cells, Cell startCell, Cell endCell, int numCheckpoints, int numAttempts) {
+		startCell.addCheckpoint();
+		endCell.addCheckpoint();
+		for (int i = 0; i < numCheckpoints; i++) {
+			int x = Application.rng.nextInt(cells.size());
+			int y = Application.rng.nextInt(cells.get(x).size());
+			Cell checkpointCell = cells.get(x).get(y);
+			checkpointCell.addCheckpoint();
 		}
 	}
-	
-	public List<Cell> getCheckpointCells() {
-		return Collections.unmodifiableList(checkpointCells);
-	}
-		
-	public Immutable2DArrayList<Cell> getCells() {
-		return new Immutable2DArrayList<Cell>(cells);
-	}
-	
+				
 	@Override
 	public void update(double delta) {
 

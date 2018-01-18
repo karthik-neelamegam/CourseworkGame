@@ -19,7 +19,7 @@ public class Checkpoint extends Entity {
 	@Override
 	public void render(Graphics g) {
 		g.setColor(Color.YELLOW);
-		g.fillOval(getX(), getY(), getWidth(), getHeight());
+		g.fillRect(getX(), getY(), getWidth(), getHeight());
 	}
 	
 }

@@ -8,13 +8,13 @@ import javax.swing.JFrame;
 
 public class Application {
 	public static Random rng = new Random();
-	private JFrame frame;
+	//private JFrame frame;
 	public Application(double screenHeightFraction, double aspectRatio, int targetFps) {
+		JFrame frame = new JFrame("CourseworkGame");
 		ScreenDisplayer screenDisplayer = new ScreenDisplayer(targetFps);
 		GameSettings defaults = GameSettings.getDefaultSettings();
 		Screen menu = new MainMenuScreen(screenDisplayer, defaults);
 		screenDisplayer.setScreen(menu);
-		frame = new JFrame("CourseworkGame");
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		double screenHeight = screenSize.getHeight();
 		int windowHeight = (int)(screenHeight*screenHeightFraction);

@@ -33,11 +33,12 @@ public class SurfacePicker {
 		double cumulativeRatios = 0;
 		Iterator<Entry<Surface, Double>> surfaceRatiosIterator = surfaceRatios
 				.entrySet().iterator();
-		while (cumulativeRatios < rand) {
-			Entry<Surface, Double> entry = surfaceRatiosIterator.next();
+		Entry<Surface, Double> entry = null;
+		do {
+			entry = surfaceRatiosIterator.next();
 			double ratio = entry.getValue();
 			cumulativeRatios += ratio;
-		}
-		return surfaceRatiosIterator.next().getKey();
+		} while(cumulativeRatios < rand);
+		return entry.getKey();
 	}
 }

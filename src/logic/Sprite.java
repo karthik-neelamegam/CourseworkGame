@@ -1,27 +1,38 @@
 package logic;
 
+import user_interface.Application;
+
 public abstract class Sprite extends Entity {
 
-	protected double turningRate;
 	protected int vel;
-	protected double angle;
+	protected Direction directionFacing;
 
 	public Sprite(int x, int y, int w, int h, double angle, double turningRate) {
 		super(x, y, w, h);
-		this.angle = angle;
-		this.turningRate = turningRate;
+		int rand = Application.rng.nextInt(Direction.values().length);
+		int i = 0;
+		for (Direction direction : Direction.values()) {
+			if (rand == i) {
+				direction = directionFacing;
+				break;
+			}
+			i++;
+		}
 	}
 
 	// use of enum to restrict options at compile time and avoid need to check
 	// for abnormals
 	public void move(Direction dir) {
-		if (dir == Direction.ANTICLOCKWISE) {
-			angle += turningRate;
-		} else if (dir == Direction.CLOCKWISE) {
-			angle -= turningRate;
+		switch (dir) {
+		case NORTH:
+			setY(getY() - vel);
+		case SOUTH:
+			setY(getY() + vel);
+		case EAST:
+			setX(getX() + vel);
+		case WEST:
+			setX(getX() - vel);
 		}
-		setX(getX() + (int)(Math.round(vel * Math.cos(angle))));
-		setY(getY() + (int)(Math.round(vel * Math.sin(angle))));
 	}
 
 }

@@ -20,7 +20,7 @@ public class GameScreen implements Screen {
 		this.screenDisplayer = screenDisplayer;
 		this.gameSettings = gameSettings;
 		paused = false;
-		maze = new Maze(20,20,0,0,screenDisplayer.getWidth(), screenDisplayer.getHeight(), 1, 10, SurfacePicker.getUniformSurfacePicker());
+		maze = new Maze(20,20,0,0,screenDisplayer.getWidth(), screenDisplayer.getHeight(), 0d, 10, 10, SurfacePicker.getUniformSurfacePicker());
 	}
 
 	@Override

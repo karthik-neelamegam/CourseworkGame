@@ -41,11 +41,15 @@ public class Cell extends Entity {
 		return new Point(midX, midY);
 	}
 	
-	void addCheckpoint(Checkpoint checkpoint) {
-		this.checkpoint = checkpoint;
+	public void addCheckpoint() {
+		if(checkpoint == null) {
+			checkpoint = new Checkpoint(getX(), getY(), getWidth(), getHeight());
+		} else {
+			System.out.println("Cell already has checkpoint");
+		}
 	}
 	
-	void setSurface(Surface surface) {
+	public void setSurface(Surface surface) {
 		this.surface = surface;
 	}
 
@@ -135,6 +139,9 @@ public class Cell extends Entity {
 
 	@Override
 	public void render(Graphics g) {
+		if(checkpoint != null) {
+			checkpoint.render(g);
+		}
 		g.setColor(Color.BLACK);
 		g.drawString(""+adjacentCells.size(),getX()+getWidth()/2,getY()+getHeight()/2);
 	}
