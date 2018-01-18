@@ -5,6 +5,6 @@ import java.util.List;
 
 public class MergeSorter<T> {
 	public MergeSorter(List<T> items, Comparator<T> comparator) {
-		
+		int test = 1;
 	}
 }
