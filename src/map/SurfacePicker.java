@@ -1,6 +1,6 @@
 package map;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -8,10 +8,10 @@ import user_interface.Application;
 
 public class SurfacePicker {
 	
-	private HashMap<Surface, Double> surfaceRatios;
+	private EnumMap<Surface, Double> surfaceRatios;
 	private double totalRatio;
 
-	public SurfacePicker(HashMap<Surface, Double> surfaceRatios) {
+	public SurfacePicker(EnumMap<Surface, Double> surfaceRatios) {
 		this.surfaceRatios = surfaceRatios;
 		totalRatio = 0;
 		for (Entry<Surface, Double> entry : surfaceRatios.entrySet()) {
@@ -20,11 +20,11 @@ public class SurfacePicker {
 		}
 	}
 	
-	public static SurfacePicker getUniformSurfacePicker() {
-		HashMap<Surface, Double> surfaceRatios = new HashMap<Surface, Double>();
-		for (Surface surface : Surface.values()) { 
-			 surfaceRatios.put(surface, 1.0);
-		}
+	public static SurfacePicker getDefaultSurfacePicker() {
+		EnumMap<Surface, Double> surfaceRatios = new EnumMap<Surface, Double>(Surface.class);
+		surfaceRatios.put(Surface.SLOW,0.1);
+		surfaceRatios.put(Surface.NORMAL,0.8);
+		surfaceRatios.put(Surface.FAST,0.1);
 		return new SurfacePicker(surfaceRatios);
 	}
 

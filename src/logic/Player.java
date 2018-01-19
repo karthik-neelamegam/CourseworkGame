@@ -1,29 +1,37 @@
 package logic;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.Color;
+import java.awt.Graphics;
 
-public class Player implements KeyListener {
+import map.Cell;
+
+public class Player extends Sprite {
+	private Color color;
+	private double baseVel;
+	private Direction direction;
+	private Cell currentCell;
+	public Player(Cell startCell, double width, double height, double baseVel, Color color) {
+		super(startCell.x, startCell.y, startCell.width, startCell.height, baseVel);
+		this.color = color;
+		this.baseVel = baseVel;
+	}
 	
-	public Player()
+	protected void setDirection(Direction direction) {
+		this.direction = direction;
+	}
+
+	public void moveToAdjacentCell(Direction direction) {
+		//TODO: need to do the movement shit
+	}
 	
 	@Override
-	public void keyPressed(KeyEvent e) {
-		switch(e.getKeyCode()) {
-		case KeyEvent.VK_UP
-		}
+	public void update(double delta) {
+		vel = baseVel;
+		move(direction, delta);
 	}
-
 	@Override
-	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
+	public void render(Graphics g) {
+		g.setColor(color);
+		g.fillRoundRect((int)x,  (int)y,  (int)width, (int)height, (int)(width/5), (int)(height/5));
 	}
-
-	@Override
-	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

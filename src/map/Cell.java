@@ -1,127 +1,152 @@
 package map;
-import java.awt.Color;
+
 import java.awt.Graphics;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import logic.Direction;
 import logic.Entity;
 import user_interface.Application;
 
 public class Cell extends Entity {
-	
-	//need to refactor this whole thing
-	
+
+	// need to refactor this whole thing
+
 	// using adjacency lists because sparse
-	//CAN CHANGE TO ARRAYLIST IF THE NEED ARISES! I.E. IF DON'T NEED TO STORE WALL OBJECTS
-	//private HashMap<Cell, Wall> neighbouringCellss; // list because might change
-													// shape and cells in
-													// edge/corner have fewer
-													// neighbours
-	private ArrayList<Cell> neighbouringCells;
-	private HashSet<Cell> adjacentCells; //explain why set vs list (constant look up)
-	private boolean visited;
-	private Surface surface;
-	private Checkpoint checkpoint;
+	// CAN CHANGE TO ARRAYLIST IF THE NEED ARISES! I.E. IF DON'T NEED TO STORE
+	// WALL OBJECTS
+	// private HashMap<Cell, Wall> neighbouringCellss; // list because might
+	// change
+	// shape and cells in
+	// edge/corner have fewer
+	// neighbours
+	private class Adjacency {
+		private Direction direction;
+		private Surface surface;
+		public Adjacency(Direction direction, Surface surface) {
+			this.direction = direction;
+			this.surface = surface;
+		}
+		public Direction getDirection() {
+			return direction;
+		}
+		public Surface getSurface() {
+			return surface;
+		}
+	}
 	
-	public Cell(int x, int y, int side, Surface surface) {
+	private Map<Cell, Direction> neighbouringCellsToDirectionsMap; //need to lookup both ways, bimap overkill because only 4 values, enummap essentially an array anyway, better than hashmap in terms of space?
+	private Map<Direction, Cell> directionstoNeighbouringCellsMap;
+	private Map<Cell, Adjacency> adjacentCellsMap; // explain why map vs list (constant look up), never need to look up cell from direction
+	private boolean visited;
+	private Checkpoint checkpoint;
+
+	public Cell(double x, double y, double side) {
 		super(x, y, side, side);
 		visited = false;
-		neighbouringCells = new ArrayList<Cell>();
-		adjacentCells = new HashSet<Cell>();
-		this.surface = surface;	
+		neighbouringCellsToDirectionsMap = new HashMap<Cell, Direction>();
+		directionstoNeighbouringCellsMap = new EnumMap<Direction, Cell>(Direction.class);
+		adjacentCellsMap = new HashMap<Cell, Adjacency>();
 	}
-	
+
 	public Point getMidpoint(Cell cell) {
-		int midX = (int)((float)((getX() + cell.getX() + (float)getWidth()/2 + (float)cell.getWidth()/2))/2);
-		int midY = (int)((float)((getY() + cell.getY() + (float)getHeight()/2 + (float)cell.getHeight()/2))/2);
+		int midX = (int) ((float) ((x + cell.x + (float) width / 2 + (float) cell.width / 2)) / 2);
+		int midY = (int) ((float) ((y + cell.y + (float) height / 2 + (float) cell.height / 2)) / 2);
 		return new Point(midX, midY);
 	}
-	
+
 	public void addCheckpoint() {
-		if(checkpoint == null) {
-			checkpoint = new Checkpoint(getX(), getY(), getWidth(), getHeight());
+		if (checkpoint == null) {
+			checkpoint = new Checkpoint(x, y, width, height);
 		} else {
 			System.out.println("Cell already has checkpoint");
 		}
 	}
-	
-	public void setSurface(Surface surface) {
-		this.surface = surface;
-	}
 
-	public double getSpeedMultiplier() {
-		return surface.getSpeedMultiplier();
-	}
-		
-	void addNeighbouringCell(Cell cell) {
-		neighbouringCells.add(cell);
-		cell.neighbouringCells.add(this);
-	}
-
-	void removeWall(Cell cell) {
-		if(neighbouringCells.contains(cell)) {
-			adjacentCells.add(cell);
-			cell.adjacentCells.add(this);
-		}
-		else {
-			throw new NullPointerException();
-		}
+	void addNeighbouringCell(Cell cell, Direction direction) {
+		neighbouringCellsToDirectionsMap.put(cell, direction);
+		cell.neighbouringCellsToDirectionsMap.put(this, direction.getOpposite());
+		directionstoNeighbouringCellsMap.put(direction, cell);
+		cell.directionstoNeighbouringCellsMap.put(direction.getOpposite(), this);
 	}
 	
-	//talk about this somewhere in technical solution
+	public Cell getNeighbouringCell(Direction direction) {
+		Cell neighbouringCell = null;
+		if(directionstoNeighbouringCellsMap.containsKey(direction)) {
+			neighbouringCell = directionstoNeighbouringCellsMap.get(direction);
+		} 
+		return neighbouringCell;
+	}
+	
+	void setAdjacentTo(Cell cell, Surface surface) {
+		//nullpointerexception could occur, but if it does i want to know why
+		Direction direction = neighbouringCellsToDirectionsMap.get(cell);
+		adjacentCellsMap.put(cell, new Adjacency(direction, surface));
+		cell.adjacentCellsMap.put(this, new Adjacency(direction.getOpposite(), surface));
+	}
+
+	// talk about this somewhere in technical solution
 	public Set<Cell> getAdjacentCells() {
-		return Collections.unmodifiableSet(adjacentCells);
+		return Collections.unmodifiableSet(adjacentCellsMap.keySet());
 	}
-
+	
 	public Cell getRandomUnvisitedNeighbouringCell() {
 		ArrayList<Cell> unvisitedNeighbouringCells = new ArrayList<Cell>();
 		Cell neighbouringCell = null;
-		for (Cell cell : neighbouringCells) {
+		for (Cell cell : neighbouringCellsToDirectionsMap.keySet()) {
 			if (!cell.isVisited()) {
 				unvisitedNeighbouringCells.add(cell);
 			}
 		}
 		if (unvisitedNeighbouringCells.size() != 0) {
-			int random = Application.rng.nextInt(unvisitedNeighbouringCells.size());
+			int random = Application.rng.nextInt(unvisitedNeighbouringCells
+					.size());
 			neighbouringCell = unvisitedNeighbouringCells.get(random);
 		}
 		return neighbouringCell;
 	}
-	
-	//O(n) but set is really small so doesn't matter
+
+	// O(n) but set max 4 size so essentially constant time
 	public Cell getRandomAdjacentCell() {
-		int size = adjacentCells.size();
+		int size = adjacentCellsMap.size();
 		int randomIndex = Application.rng.nextInt(size);
 		int i = 0;
-		Iterator<Cell> adjacentCellsIterator = adjacentCells.iterator();
-		while(i < randomIndex) {
+		Iterator<Cell> adjacentCellsIterator = adjacentCellsMap.keySet().iterator();
+		while (i < randomIndex) {
 			i++;
 			adjacentCellsIterator.next();
 		}
 		return adjacentCellsIterator.next();
 	}
-	
-	public boolean isAdjacent(Cell other) {
-		return adjacentCells.contains(other);
+
+	public double getSpeedMultiplier(Cell adjacentCell) {
+		return adjacentCellsMap.get(adjacentCell).getSurface().getSpeedMultiplier();
 	}
 	
-	public double getWeightedDistanceBetweenCentres(Cell other) {
-		double euclideanDistance = getEuclideanDistanceBetweenCentres(other);
-		double halfEuclideanDistance = euclideanDistance/2;
-		double weightedDistance = (halfEuclideanDistance)/getSpeedMultiplier() + (halfEuclideanDistance/2)/other.getSpeedMultiplier();
-		return weightedDistance;
+	public boolean isAdjacentTo(Cell other) {
+		return adjacentCellsMap.containsKey(other);
 	}
 
+	public double getWeightedDistanceToAdjacentCell(Cell cell) {
+		double euclideanDistance = getEuclideanDistanceBetweenCentres(cell);
+		double weightedDistance = euclideanDistance*getSpeedMultiplier(cell);
+		return weightedDistance;
+	}
+	
 	public boolean hasCheckpoint() {
 		return checkpoint != null;
 	}
-	
+
 	public int getOrder() {
-		return adjacentCells.size();
+		return adjacentCellsMap.size();
 	}
 
 	public boolean isVisited() {
@@ -139,11 +164,11 @@ public class Cell extends Entity {
 
 	@Override
 	public void render(Graphics g) {
-		if(checkpoint != null) {
+		//TODO: render surfaces
+		g.fillRect((int) x, (int) y, (int) width, (int) height);
+		if (checkpoint != null) {
 			checkpoint.render(g);
 		}
-		g.setColor(Color.BLACK);
-		g.drawString(""+adjacentCells.size(),getX()+getWidth()/2,getY()+getHeight()/2);
 	}
 
 }

@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 
+import logic.HumanPlayer;
 import map.Maze;
 import map.SurfacePicker;
 
@@ -15,24 +16,28 @@ public class GameScreen implements Screen {
 	private GameSettings gameSettings;
 	private boolean paused;
 	private Maze maze;
+	private HumanPlayer player;
 	
 	public GameScreen(ScreenDisplayer screenDisplayer, GameSettings gameSettings) {
 		this.screenDisplayer = screenDisplayer;
 		this.gameSettings = gameSettings;
 		paused = false;
-		maze = new Maze(20,20,0,0,screenDisplayer.getWidth(), screenDisplayer.getHeight(), 0d, 10, 10, SurfacePicker.getUniformSurfacePicker());
+		maze = new Maze(20,20,0,0,screenDisplayer.getWidth(), screenDisplayer.getHeight(), 0d, 0.1, 10, 10, SurfacePicker.getDefaultSurfacePicker());
+		player = new HumanPlayer(0,0,maze.getCellSide(),maze.getCellSide(),0,1,Color.BLACK);
 	}
 
 	@Override
-	public void keyPressed(KeyEvent arg0) {
+	public void keyPressed(KeyEvent e) {
+		player.keyPressed(e);
 	}
 
 	@Override
-	public void keyReleased(KeyEvent arg0) {
+	public void keyReleased(KeyEvent e) {
+		player.keyReleased(e);
 	}
 
 	@Override
-	public void keyTyped(KeyEvent arg0) {
+	public void keyTyped(KeyEvent e) {
 	}
 
 	@Override
@@ -49,7 +54,7 @@ public class GameScreen implements Screen {
 	@Override
 	public void update(double delta) {
 		if(!paused) {
-			//update stuff
+			player.update(delta);
 		}
 	}
 	
@@ -59,6 +64,7 @@ public class GameScreen implements Screen {
 		g.fillRect(0, 0, screenDisplayer.getWidth(), screenDisplayer.getHeight());
 		g.setColor(Color.WHITE);
 		maze.render(g);
+		player.render(g);
 		if(paused) {
 			renderPauseOverlay(g);
 		}

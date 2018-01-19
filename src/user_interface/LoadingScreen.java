@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 
+import logic.HumanPlayer;
+
 public class LoadingScreen implements Screen {
 
 	private ScreenDisplayer screenDisplayer;

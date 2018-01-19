@@ -4,11 +4,12 @@ import user_interface.Application;
 
 public abstract class Sprite extends Entity {
 
-	protected int vel;
+	protected double vel;
 	protected Direction directionFacing;
 
-	public Sprite(int x, int y, int w, int h, double angle, double turningRate) {
-		super(x, y, w, h);
+	public Sprite(double x, double y, double width, double height, double vel) {
+		super(x, y, width, height);
+		this.vel = vel;
 		int rand = Application.rng.nextInt(Direction.values().length);
 		int i = 0;
 		for (Direction direction : Direction.values()) {
@@ -22,22 +23,22 @@ public abstract class Sprite extends Entity {
 
 	// use of enum to restrict options at compile time and avoid need to check
 	// for abnormals
-	public void move(Direction dir) {
+	public void move(Direction dir, double delta) {
 		switch (dir) {
 		case NORTH:
-			y -= vel;
+			y -= vel*delta;
 			directionFacing = Direction.NORTH;
 			break;
 		case SOUTH:
-			y += vel;
+			y += vel*delta;
 			directionFacing = Direction.SOUTH;
 			break;
 		case EAST:
-			x += vel;
+			x += vel*delta;
 			directionFacing = Direction.EAST;
 			break;
 		case WEST:
-			x -= vel;
+			x -= vel*delta;
 			directionFacing = Direction.WEST;
 			break;
 		}

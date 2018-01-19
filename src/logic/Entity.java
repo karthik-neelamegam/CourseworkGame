@@ -4,9 +4,9 @@ import java.awt.Graphics;
 
 public abstract class Entity {
 	
-	protected int x, y, width, height;
+	protected double x, y, width, height;
 
-	public Entity(int x, int y, int width, int height) {
+	public Entity(double x, double y, double width, double height) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
@@ -26,44 +26,44 @@ public abstract class Entity {
 		return Math.sqrt(getSquaredEuclideanDistanceBetweenCentres(other));
 	}
 	
-	public int getCentreX() {
+	public double getCentreX() {
 		return x + width/2;
 	}
 	
-	public int getCentreY() {
+	public double getCentreY() {
 		return y + height/2;
 	}
 	
-	public int getX() {
+	public double getX() {
 		return x;
 	}
 	
-	public void setX(int x) {
+	public void setX(double x) {
 		this.x = x;
 	}
 	
-	public int getY() {
+	public double getY() {
 		return y;
 	}
 	
-	public void setY(int y) {
+	public void setY(double y) {
 		this.y = y;
 	}
 	
 
-	public int getWidth() {
+	public double getWidth() {
 		return width;
 	}
 
-	public void setWidth(int width) {
+	public void setWidth(double width) {
 		this.width = width;
 	}
 
-	public int getHeight() {
+	public double getHeight() {
 		return height;
 	}
 
-	public void setHeight(int height) {
-		this.height = height;
+	public void setHeight(int h) {
+		this.height = h;
 	}
 }
