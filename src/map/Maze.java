@@ -27,41 +27,48 @@ public class Maze extends Entity {
 		cells = new Cell[numCellsWide][numCellsHigh];
 		int cellSide = Math.min(maxHeight / numCellsHigh, maxWidth
 				/ numCellsWide);
-		initCellMatrix(cells, cellSide, surfacePicker);
+		initCellMatrix(cells, cellSide);
 		System.out.println("Cell matrix initialised");
-		generateDepthFirstPerfectMaze(cells);
+		generateDepthFirstPerfectMaze(cells, surfacePicker);
 		System.out.println("Generated perfect maze");
-		removeDeadEnds(cells, deadEndProbability);
+		removeDeadEnds(cells, deadEndProbability, surfacePicker);
 		System.out.println("Removed dead ends");
 		walls = initWallsList(cells, wallProportionOfCellDimensions);
 		System.out.println("Physical walls initialised");
 		Cell topLeftCell = cells[0][0];
-		Cell bottomRightCell = cells[numCellsWide-1][numCellsHigh-1];
+		Cell bottomRightCell = cells[cells.length-1][cells[0].length-1];
 		placeCheckpoints(cells, topLeftCell, bottomRightCell, numCheckpoints,
 				numCheckpointAttempts);
 		System.out.println("Checkpoints placed");
 	}
 
-	private void initCellMatrix(Cell[][] cells, int cellSide, SurfacePicker surfacePicker) {
+	public Cell getStartCell() {
+		return cells[0][0];
+	}
+	
+	public Cell getEndCell() {
+		return cells[cells.length-1][cells[0].length-1];
+	}
+	
+	private void initCellMatrix(Cell[][] cells, double cellSide) {
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
-				Cell currentCell = new Cell(x + i * cellSide, y + j * cellSide,
-						cellSide, surfacePicker.getRandomSurface());
+				Cell currentCell = new Cell(x + i * cellSide, y + j * cellSide, cellSide);
 				cells[i][j] = currentCell;
 				if (j > 0) {
 					Cell neighbouringCell = cells[i][j - 1];
-					currentCell.addNeighbouringCell(neighbouringCell, Direction.WEST);
+					currentCell.addNeighbouringCell(neighbouringCell, Direction.NORTH);
 				}
 				if (i > 0) {
 					Cell neighbouringCell = cells[i - 1][j];
-					currentCell.addNeighbouringCell(neighbouringCell, Direction.NORTH);
+					currentCell.addNeighbouringCell(neighbouringCell, Direction.WEST);
 				}
 			}
 		}
 	}
 
 	// this is graph traversal, cells are nodes, lack of walls are edges
-	private void generateDepthFirstPerfectMaze(Cell[][] cells) {
+	private void generateDepthFirstPerfectMaze(Cell[][] cells, SurfacePicker surfacePicker) {
 		Stack<Cell> stack = new Stack<Cell>();
 		Cell currentCell = cells[0][0];
 		int unvisitedCells = cells.length*cells[0].length;
@@ -72,7 +79,7 @@ public class Maze extends Entity {
 			if ((neighbouringCell = currentCell
 					.getRandomUnvisitedNeighbouringCell()) != null) {
 				stack.push(currentCell);
-				currentCell.setAdjacentTo(neighbouringCell);
+				currentCell.setAdjacentTo(neighbouringCell, surfacePicker.getRandomSurface());
 				currentCell = neighbouringCell;
 				neighbouringCell.setVisited();
 				unvisitedCells--;
@@ -87,7 +94,7 @@ public class Maze extends Entity {
 	}
 
 	private void removeDeadEnds(Cell[][] cells,
-			double deadEndProbability) {
+			double deadEndProbability, SurfacePicker surfacePicker) {
 		List<Cell> cellsList = new ArrayList<Cell>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -100,7 +107,7 @@ public class Maze extends Entity {
 				System.out.println("REMOVING");
 				if (Application.rng.nextFloat() < deadEndProbability) {
 					Cell adjacentCell = cell.getRandomAdjacentCell();
-					cell.setAdjacentTo(adjacentCell);
+					cell.setAdjacentTo(adjacentCell, surfacePicker.getRandomSurface());
 				}
 			}
 		}
@@ -127,16 +134,16 @@ public class Maze extends Entity {
 							proportionOfCellDimensions));
 				}
 				if (j > 0) {
-					Cell westCell = cells[i][j-1];
-					if (!currentCell.isAdjacentTo(westCell)) {
-						walls.add(Wall.createWall(currentCell, Direction.WEST,
+					Cell northCell = cells[i][j-1];
+					if (!currentCell.isAdjacentTo(northCell)) {
+						walls.add(Wall.createWall(currentCell, Direction.NORTH,
 								proportionOfCellDimensions));
 					}
 				}
 				if (i > 0) {
-					Cell northCell = cells[i-1][j];
-					if (!currentCell.isAdjacentTo(northCell)) {
-						walls.add(Wall.createWall(currentCell, Direction.NORTH,
+					Cell westCell = cells[i-1][j];
+					if (!currentCell.isAdjacentTo(westCell)) {
+						walls.add(Wall.createWall(currentCell, Direction.WEST,
 								proportionOfCellDimensions));
 					}
 				}

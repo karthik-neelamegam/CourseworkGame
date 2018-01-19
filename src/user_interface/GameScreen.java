@@ -23,7 +23,7 @@ public class GameScreen implements Screen {
 		this.gameSettings = gameSettings;
 		paused = false;
 		maze = new Maze(20,20,0,0,screenDisplayer.getWidth(), screenDisplayer.getHeight(), 0d, 0.1, 10, 10, SurfacePicker.getDefaultSurfacePicker());
-		player = new HumanPlayer(0,0,maze.getCellSide(),maze.getCellSide(),0,1,Color.BLACK);
+		player = new HumanPlayer(maze.getStartCell(),maze.getCellSide()/5,Color.GREEN);
 	}
 
 	@Override

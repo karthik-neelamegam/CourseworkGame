@@ -1,5 +1,6 @@
 package map;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.util.ArrayList;
@@ -134,7 +135,20 @@ public class Cell extends Entity {
 	public boolean isAdjacentTo(Cell other) {
 		return adjacentCellsMap.containsKey(other);
 	}
+	
+	public Cell getAdjacentCell(Direction direction) {
+		Cell neighbouringCell = directionstoNeighbouringCellsMap.get(direction);
+		Cell adjacentCell = null;
+		if(adjacentCellsMap.containsKey(neighbouringCell)) {
+			adjacentCell = neighbouringCell;
+		}
+		return adjacentCell;
+	}
 
+	public boolean isInCell(double px, double py) {
+		return px >= x && px <= x+width && py >= y && py <= y+height;  
+	}
+	
 	public double getWeightedDistanceToAdjacentCell(Cell cell) {
 		double euclideanDistance = getEuclideanDistanceBetweenCentres(cell);
 		double weightedDistance = euclideanDistance*getSpeedMultiplier(cell);
@@ -165,7 +179,10 @@ public class Cell extends Entity {
 	@Override
 	public void render(Graphics g) {
 		//TODO: render surfaces
+		g.setColor(Color.WHITE);
 		g.fillRect((int) x, (int) y, (int) width, (int) height);
+		g.setColor(Color.BLACK);
+		g.drawString(""+getX()+","+getY(), (int)(x+width/4), (int)(y+height/4));
 		if (checkpoint != null) {
 			checkpoint.render(g);
 		}
