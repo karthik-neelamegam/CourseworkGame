@@ -13,9 +13,11 @@ public class Player extends Sprite {
 	protected Direction queuedDirection;
 	protected int numCheckpointsReached;
 	protected int numCheckpointsToReach;
-	public Player(Cell startCell, double baseVel, Color color, int numCheckpointsToReach) {
+	protected double tolerance; //should be twice the ratio between max velocity and cellside for consistency 
+	public Player(Cell startCell, double baseVel, Color color, int numCheckpointsToReach, double tolerance) {
 		super(startCell.x, startCell.y, startCell.width, startCell.height, baseVel);
 		this.color = color;
+		this.tolerance = tolerance;
 		this.baseVel = baseVel;
 		currentCell = startCell;
 		this.numCheckpointsToReach = numCheckpointsToReach;
@@ -61,7 +63,7 @@ public class Player extends Sprite {
 		} else {
 			switch(direction) {
 			case NORTH: case SOUTH:
-				if(x >= currentCell.getX() - currentCell.getWidth()/20 && x <= currentCell.getX() + currentCell.getWidth()/20) {
+				if(x >= currentCell.getX() - tolerance*currentCell.getWidth() && x <= currentCell.getX() + tolerance*currentCell.getWidth()) {
 					System.out.println("E");
 					x = currentCell.getX();
 					this.direction = direction;
@@ -71,7 +73,7 @@ public class Player extends Sprite {
 					queuedDirection = direction;
 				} break;
 			case WEST: case EAST:
-				if(y >= currentCell.getY() - currentCell.getHeight()/20 && y <= currentCell.getY() + currentCell.getHeight()/20) {
+				if(y >= currentCell.getY() - tolerance*currentCell.getHeight() && y <= currentCell.getY() + tolerance*currentCell.getHeight()) {
 					System.out.println("G");
 					y = currentCell.getY();
 					this.direction = direction;

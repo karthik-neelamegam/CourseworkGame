@@ -7,13 +7,17 @@ import logic.Direction;
 import logic.Entity;
 
 public class Wall extends Entity {
-	public Wall(double x, double y, double width, double height) {
+	private Cell cell1, cell2;
+	public Wall(Cell cell1, Cell cell2, double x, double y, double width, double height) {
 		super(x, y, width, height);
+		this.cell1 = cell1;
+		this.cell2 = cell2;
 	}
-
 	public static Wall createWall(Cell cell1, Cell cell2,
 			double proportionOfCellDimensions) {
 		double x = 0, y = 0, width = 0, height = 0;
+		//TODO: get the direction of cell2 to cell1 and then invoke the other method 
+		
 		if (cell1.getX() != cell2.getX()) { //implies the wall is vertical
 			x = Math.max(cell1.getX(), cell2.getX());
 			y = cell1.getY();
@@ -31,7 +35,7 @@ public class Wall extends Entity {
 					* proportionOfCellDimensions;
 			y -= height / 2;
 		}
-		return new Wall(x, y, width, height);
+		return new Wall(cell1, cell2, x, y, width, height);
 	}
 	
 	public static Wall createWall(Cell cell, Direction dir,
@@ -62,10 +66,15 @@ public class Wall extends Entity {
 					* proportionOfCellDimensions;
 			y -= height / 2;
 		}
-		return new Wall(x, y, width, height);
+		return new Wall(cell, null, x, y, width, height);
 	}
 
-
+	public Cell getCell1() {
+		return cell1;
+	}
+	public Cell getCell2() {
+		return cell2;
+	}
 	@Override
 	public void update(double delta) {
 

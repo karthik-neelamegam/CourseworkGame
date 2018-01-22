@@ -45,18 +45,23 @@ public class Cell extends Entity {
 		}
 	}
 	
-	private Map<Cell, Direction> neighbouringCellsToDirectionsMap; //need to lookup both ways, bimap overkill because only 4 values, enummap essentially an array anyway, better than hashmap in terms of space?
-	private Map<Direction, Cell> directionstoNeighbouringCellsMap;
+	
+	//REFACTOR THIS 
+	//don't need this
+	//private Map<Cell, Direction> neighbouringCellsToDirectionsMap; //need to lookup both ways, bimap overkill because only 4 values, enummap essentially an array anyway, better than hashmap in terms of space?
+	//private Map<Direction, Cell> directionstoNeighbouringCellsMap;
 	private Map<Cell, Direction> adjacentCellsMap; // explain why map vs list (constant look up), never need to look up cell from direction
-	private boolean visited;
+	private Map<Cell, Direction> nonAdjacentCellsMap;
+	
 	private Checkpoint checkpoint;
 	private Surface surface;
 
 	public Cell(double x, double y, double side, Surface surface) {
 		super(x, y, side, side);
-		visited = false;
-		neighbouringCellsToDirectionsMap = new HashMap<Cell, Direction>();
-		directionstoNeighbouringCellsMap = new EnumMap<Direction, Cell>(Direction.class);
+		//neighbouringCellsToDirectionsMap = new HashMap<Cell, Direction>();
+		//directionstoNeighbouringCellsMap = new EnumMap<Direction, Cell>(Direction.class);
+		adjacentCellsMap = new HashMap<Cell, Direction>();
+		nonAdjacentCellsMap = new HashMap<Cell, Direction>();
 		adjacentCellsMap = new HashMap<Cell, Direction>();
 		this.surface = surface;
 	}
@@ -80,23 +85,26 @@ public class Cell extends Entity {
 	}
 	
 	void addNeighbouringCell(Cell cell, Direction direction) {
-		neighbouringCellsToDirectionsMap.put(cell, direction);
+		nonAdjacentCellsMap.put(cell, direction);
+		cell.nonAdjacentCellsMap.put(this, direction.getOpposite());
+/*		neighbouringCellsToDirectionsMap.put(cell, direction);
 		cell.neighbouringCellsToDirectionsMap.put(this, direction.getOpposite());
 		directionstoNeighbouringCellsMap.put(direction, cell);
 		cell.directionstoNeighbouringCellsMap.put(direction.getOpposite(), this);
+*/	}
+
+	public Set<Cell> getNonAdjacentCells() {
+		return Collections.unmodifiableSet(nonAdjacentCellsMap.keySet());
 	}
 	
-	public Cell getNeighbouringCell(Direction direction) {
-		Cell neighbouringCell = null;
-		if(directionstoNeighbouringCellsMap.containsKey(direction)) {
-			neighbouringCell = directionstoNeighbouringCellsMap.get(direction);
-		} 
-		return neighbouringCell;
+/*	public Cell getNeighbouringCell(Direction direction) {
+		//throws error but i wanna know
+		return directionstoNeighbouringCellsMap.get(direction);
 	}
-	
+*/		
 	void setAdjacentTo(Cell cell) {
 		//nullpointerexception could occur, but if it does i want to know why
-		Direction direction = neighbouringCellsToDirectionsMap.get(cell);
+		Direction direction = nonAdjacentCellsMap.get(cell);
 		adjacentCellsMap.put(cell, direction);
 		cell.adjacentCellsMap.put(this, direction.getOpposite());
 	}
@@ -106,22 +114,6 @@ public class Cell extends Entity {
 		return Collections.unmodifiableSet(adjacentCellsMap.keySet());
 	}
 	
-	public Cell getRandomUnvisitedNeighbouringCell() {
-		ArrayList<Cell> unvisitedNeighbouringCells = new ArrayList<Cell>();
-		Cell neighbouringCell = null;
-		for (Cell cell : neighbouringCellsToDirectionsMap.keySet()) {
-			if (!cell.isVisited()) {
-				unvisitedNeighbouringCells.add(cell);
-			}
-		}
-		if (unvisitedNeighbouringCells.size() != 0) {
-			int random = Application.rng.nextInt(unvisitedNeighbouringCells
-					.size());
-			neighbouringCell = unvisitedNeighbouringCells.get(random);
-		}
-		return neighbouringCell;
-	}
-
 	// O(n) but set max 4 size so essentially constant time
 	public Cell getRandomAdjacentCell() {
 		int size = adjacentCellsMap.size();
@@ -184,14 +176,6 @@ public class Cell extends Entity {
 
 	public int getOrder() {
 		return adjacentCellsMap.size();
-	}
-
-	public boolean isVisited() {
-		return visited;
-	}
-
-	void setVisited() {
-		this.visited = true;
 	}
 
 	@Override

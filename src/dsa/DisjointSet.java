@@ -38,11 +38,20 @@ public class DisjointSet<T> {
 	}
 
 	private HashMap<T, TreeVertex> vertices;
-
-	public DisjointSet(Collection<T> items) {
+	public void initSet() {
 		vertices = new HashMap<T, TreeVertex>();
+	}
+	public void add(T item) {
+		vertices.put(item, new TreeVertex());
+	}
+	
+	public DisjointSet() {
+		initSet();
+	}
+	public DisjointSet(Collection<T> items) {
+		initSet();
 		for (T item : items) {
-			vertices.put(item, new TreeVertex());
+			add(item);
 		}
 	}
 

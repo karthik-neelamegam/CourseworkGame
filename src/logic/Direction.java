@@ -1,7 +1,10 @@
 package logic;
 
+import user_interface.Application;
+
 public enum Direction {
 	NORTH, SOUTH, EAST, WEST;
+	private final static Direction[] directions = Direction.values();
 	public Direction getOpposite() {
 		Direction opposite = null;
 		switch (this) {
@@ -19,5 +22,8 @@ public enum Direction {
 			break;
 		}
 		return opposite;
+	}
+	public static Direction getRandom() {
+		return directions[Application.rng.nextInt(directions.length)];
 	}
 }
