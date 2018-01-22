@@ -18,7 +18,7 @@ public class Maze extends Entity {
 
 	public Maze(int numCellsWide, int numCellsHigh, int x, int y, int maxWidth,
 			int maxHeight, double deadEndProbability, double wallProportionOfCellDimensions, int numCheckpoints,
-			int numCheckpointAttempts, SurfacePicker surfacePicker) {
+			int numCheckpointAttempts, SurfacePicker surfacePicker, Color checkpointColor) {
 		super(x, y, numCellsWide
 				* Math.min(maxHeight / numCellsHigh, maxWidth / numCellsWide),
 				numCellsHigh
@@ -27,18 +27,18 @@ public class Maze extends Entity {
 		cells = new Cell[numCellsWide][numCellsHigh];
 		int cellSide = Math.min(maxHeight / numCellsHigh, maxWidth
 				/ numCellsWide);
-		initCellMatrix(cells, cellSide);
+		initCellMatrix(cells, cellSide, surfacePicker);
 		System.out.println("Cell matrix initialised");
-		generateDepthFirstPerfectMaze(cells, surfacePicker);
+		initDepthFirstPerfectMaze(cells[0][0]);
 		System.out.println("Generated perfect maze");
-		removeDeadEnds(cells, deadEndProbability, surfacePicker);
+		removeDeadEnds(cells, deadEndProbability);
 		System.out.println("Removed dead ends");
 		walls = initWallsList(cells, wallProportionOfCellDimensions);
 		System.out.println("Physical walls initialised");
 		Cell topLeftCell = cells[0][0];
 		Cell bottomRightCell = cells[cells.length-1][cells[0].length-1];
 		placeCheckpoints(cells, topLeftCell, bottomRightCell, numCheckpoints,
-				numCheckpointAttempts);
+				numCheckpointAttempts, checkpointColor);
 		System.out.println("Checkpoints placed");
 	}
 
@@ -50,10 +50,10 @@ public class Maze extends Entity {
 		return cells[cells.length-1][cells[0].length-1];
 	}
 	
-	private void initCellMatrix(Cell[][] cells, double cellSide) {
+	private void initCellMatrix(Cell[][] cells, double cellSide, SurfacePicker surfacePicker) {
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
-				Cell currentCell = new Cell(x + i * cellSide, y + j * cellSide, cellSide);
+				Cell currentCell = new Cell(x + i * cellSide, y + j * cellSide, cellSide, surfacePicker.getRandomSurface());
 				cells[i][j] = currentCell;
 				if (j > 0) {
 					Cell neighbouringCell = cells[i][j - 1];
@@ -68,33 +68,30 @@ public class Maze extends Entity {
 	}
 
 	// this is graph traversal, cells are nodes, lack of walls are edges
-	private void generateDepthFirstPerfectMaze(Cell[][] cells, SurfacePicker surfacePicker) {
+	private void initDepthFirstPerfectMaze(Cell startCell) {
 		Stack<Cell> stack = new Stack<Cell>();
-		Cell currentCell = cells[0][0];
-		int unvisitedCells = cells.length*cells[0].length;
+		Cell currentCell = startCell;
 		currentCell.setVisited();
-		unvisitedCells--;
 		do {
 			Cell neighbouringCell;
 			if ((neighbouringCell = currentCell
 					.getRandomUnvisitedNeighbouringCell()) != null) {
 				stack.push(currentCell);
-				currentCell.setAdjacentTo(neighbouringCell, surfacePicker.getRandomSurface());
+				currentCell.setAdjacentTo(neighbouringCell);
 				currentCell = neighbouringCell;
 				neighbouringCell.setVisited();
-				unvisitedCells--;
 			} else if (!stack.isEmpty()) {
 				currentCell = stack.pop();
 			}
-		} while (unvisitedCells > 0);
+		} while (!stack.isEmpty());
 	}
 
-	private void generateKruskalPerfectMaze() {
+	private void initKruskalPerfectMaze() {
 		// TODO
 	}
 
 	private void removeDeadEnds(Cell[][] cells,
-			double deadEndProbability, SurfacePicker surfacePicker) {
+			double deadEndProbability) {
 		List<Cell> cellsList = new ArrayList<Cell>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -107,7 +104,7 @@ public class Maze extends Entity {
 				System.out.println("REMOVING");
 				if (Application.rng.nextFloat() < deadEndProbability) {
 					Cell adjacentCell = cell.getRandomAdjacentCell();
-					cell.setAdjacentTo(adjacentCell, surfacePicker.getRandomSurface());
+					cell.setAdjacentTo(adjacentCell);
 				}
 			}
 		}
@@ -154,14 +151,14 @@ public class Maze extends Entity {
 
 	// REMEMBER TO MAKE START AND END CHECKPOINTS AS WELL!!!
 	private void placeCheckpoints(Cell[][] cells,
-			Cell startCell, Cell endCell, int numCheckpoints, int numAttempts) {
-		startCell.addCheckpoint();
-		endCell.addCheckpoint();
+			Cell startCell, Cell endCell, int numCheckpoints, int numAttempts, Color checkpointColor) {
+		startCell.addCheckpoint(checkpointColor);
+		endCell.addCheckpoint(checkpointColor);
 		for (int i = 0; i < numCheckpoints; i++) {
 			int x = Application.rng.nextInt(cells.length);
 			int y = Application.rng.nextInt(cells[x].length);
 			Cell checkpointCell = cells[x][y];
-			checkpointCell.addCheckpoint();
+			checkpointCell.addCheckpoint(checkpointColor);
 		}
 	}
 

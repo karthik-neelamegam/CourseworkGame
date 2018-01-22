@@ -1,6 +1,7 @@
 package map;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.util.ArrayList;
@@ -46,16 +47,18 @@ public class Cell extends Entity {
 	
 	private Map<Cell, Direction> neighbouringCellsToDirectionsMap; //need to lookup both ways, bimap overkill because only 4 values, enummap essentially an array anyway, better than hashmap in terms of space?
 	private Map<Direction, Cell> directionstoNeighbouringCellsMap;
-	private Map<Cell, Adjacency> adjacentCellsMap; // explain why map vs list (constant look up), never need to look up cell from direction
+	private Map<Cell, Direction> adjacentCellsMap; // explain why map vs list (constant look up), never need to look up cell from direction
 	private boolean visited;
 	private Checkpoint checkpoint;
+	private Surface surface;
 
-	public Cell(double x, double y, double side) {
+	public Cell(double x, double y, double side, Surface surface) {
 		super(x, y, side, side);
 		visited = false;
 		neighbouringCellsToDirectionsMap = new HashMap<Cell, Direction>();
 		directionstoNeighbouringCellsMap = new EnumMap<Direction, Cell>(Direction.class);
-		adjacentCellsMap = new HashMap<Cell, Adjacency>();
+		adjacentCellsMap = new HashMap<Cell, Direction>();
+		this.surface = surface;
 	}
 
 	public Point getMidpoint(Cell cell) {
@@ -64,14 +67,18 @@ public class Cell extends Entity {
 		return new Point(midX, midY);
 	}
 
-	public void addCheckpoint() {
+	public void addCheckpoint(Color checkpointColor) {
 		if (checkpoint == null) {
-			checkpoint = new Checkpoint(x, y, width, height);
+			checkpoint = new Checkpoint(x, y, width, height, checkpointColor);
 		} else {
 			System.out.println("Cell already has checkpoint");
 		}
 	}
-
+	
+	public Checkpoint getCheckpoint() {
+		return checkpoint;
+	}
+	
 	void addNeighbouringCell(Cell cell, Direction direction) {
 		neighbouringCellsToDirectionsMap.put(cell, direction);
 		cell.neighbouringCellsToDirectionsMap.put(this, direction.getOpposite());
@@ -87,11 +94,11 @@ public class Cell extends Entity {
 		return neighbouringCell;
 	}
 	
-	void setAdjacentTo(Cell cell, Surface surface) {
+	void setAdjacentTo(Cell cell) {
 		//nullpointerexception could occur, but if it does i want to know why
 		Direction direction = neighbouringCellsToDirectionsMap.get(cell);
-		adjacentCellsMap.put(cell, new Adjacency(direction, surface));
-		cell.adjacentCellsMap.put(this, new Adjacency(direction.getOpposite(), surface));
+		adjacentCellsMap.put(cell, direction);
+		cell.adjacentCellsMap.put(this, direction.getOpposite());
 	}
 
 	// talk about this somewhere in technical solution
@@ -128,9 +135,18 @@ public class Cell extends Entity {
 		return adjacentCellsIterator.next();
 	}
 
-	public double getSpeedMultiplier(Cell adjacentCell) {
-		return adjacentCellsMap.get(adjacentCell).getSurface().getSpeedMultiplier();
+	
+	public void setSurface(Surface surface) {
+		this.surface = surface;
 	}
+
+	public double getSpeedMultiplier() {
+		return surface.getSpeedMultiplier();
+	}
+
+/*	public double getSpeedMultiplier(Cell adjacentCell) {
+		return adjacentCellsMap.get(adjacentCell).getSurface().getSpeedMultiplier();
+	}*/
 	
 	public boolean isAdjacentTo(Cell other) {
 		return adjacentCellsMap.containsKey(other);
@@ -151,9 +167,16 @@ public class Cell extends Entity {
 	
 	public double getWeightedDistanceToAdjacentCell(Cell cell) {
 		double euclideanDistance = getEuclideanDistanceBetweenCentres(cell);
+		double halfEuclideanDistance = euclideanDistance / 2;
+		double weightedDistance = (halfEuclideanDistance)
+				/ getSpeedMultiplier() + (halfEuclideanDistance / 2)
+				/ cell.getSpeedMultiplier();
+		return weightedDistance;
+
+/*		double euclideanDistance = getEuclideanDistanceBetweenCentres(cell);
 		double weightedDistance = euclideanDistance*getSpeedMultiplier(cell);
 		return weightedDistance;
-	}
+*/	}
 	
 	public boolean hasCheckpoint() {
 		return checkpoint != null;
@@ -179,10 +202,12 @@ public class Cell extends Entity {
 	@Override
 	public void render(Graphics g) {
 		//TODO: render surfaces
-		g.setColor(Color.WHITE);
+		g.setColor(surface.getColor());
 		g.fillRect((int) x, (int) y, (int) width, (int) height);
 		g.setColor(Color.BLACK);
-		g.drawString(""+getX()+","+getY(), (int)(x+width/4), (int)(y+height/4));
+		g.drawString(""+getX(), (int)(x+width/4), (int)(y+height/4));
+		g.drawString(""+getY(), (int)(x+width/4), (int)(y+3*height/4));
+
 		if (checkpoint != null) {
 			checkpoint.render(g);
 		}
