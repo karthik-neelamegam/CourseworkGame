@@ -7,7 +7,9 @@ import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 
 import logic.HumanPlayer;
+import map.DeadEndProbability;
 import map.Maze;
+import map.MazeType;
 import map.SurfacePicker;
 
 public class GameScreen implements Screen {
@@ -23,9 +25,9 @@ public class GameScreen implements Screen {
 		this.gameSettings = gameSettings;
 		paused = false;
 		maze = new Maze(10, 10, 0, 0, screenDisplayer.getWidth(),
-				screenDisplayer.getHeight(), 0d, 0.1, 10, 10,
+				screenDisplayer.getHeight(), DeadEndProbability.MEDIUM, 0.1, 10, 10,
 				SurfacePicker.getDefaultSurfacePicker(), Color.YELLOW, 0, 0,
-				9, 9, Color.BLACK);
+				9, 9, Color.BLACK, MazeType.KRUSKAL);
 		player = new HumanPlayer(maze.getStartCell(), maze.getCellSide() / 10,
 				Color.GREEN, 10, 0.2);
 	}

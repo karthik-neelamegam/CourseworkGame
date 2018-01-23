@@ -21,8 +21,8 @@ public class Maze extends Entity {
 	//private List<Wall> borderWalls;
 	private Cell startCell, endCell;
 	public Maze(int numCellsWide, int numCellsHigh, int x, int y, int maxWidth,
-			int maxHeight, double deadEndProbability, double wallProportionOfCellDimensions, int numCheckpoints,
-			int numCheckpointAttempts, SurfacePicker surfacePicker, Color checkpointColor, int startCellColumn, int startCellRow, int endCellColumn, int endCellRow, Color wallColor) {
+			int maxHeight, DeadEndProbability deadEndProbability, double wallProportionOfCellDimensions, int numCheckpoints,
+			int numCheckpointAttempts, SurfacePicker surfacePicker, Color checkpointColor, int startCellColumn, int startCellRow, int endCellColumn, int endCellRow, Color wallColor, MazeType mazeType) {
 		super(x, y, numCellsWide
 				* Math.min(maxHeight / numCellsHigh, maxWidth / numCellsWide),
 				numCellsHigh
@@ -32,8 +32,13 @@ public class Maze extends Entity {
 		System.out.println("Cells initialised");
 		startCell = cells[startCellColumn][startCellRow];
 		endCell = cells[endCellColumn][endCellRow];
-		initKruskalPerfectMaze();
-		//initDepthFirstPerfectMaze();
+		switch(mazeType) {
+		case KRUSKAL:
+			initKruskalPerfectMaze();
+			break;
+		case DFS:
+			initDepthFirstPerfectMaze();
+		}
 		System.out.println("Generated perfect maze");
 		removeDeadEnds(deadEndProbability);
 		System.out.println("Removed dead ends");
@@ -137,7 +142,7 @@ public class Maze extends Entity {
 		}
 	}
 	
-	private void removeDeadEnds(double deadEndProbability) {
+	private void removeDeadEnds(DeadEndProbability deadEndProbability) {
 		List<Cell> cellsList = new ArrayList<Cell>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -148,7 +153,7 @@ public class Maze extends Entity {
 		for (Cell cell : cellsList) {
 			if (cell.getOrder() <= 1) {
 				System.out.println("REMOVING");
-				if (Application.rng.nextFloat() < deadEndProbability) {
+				if (Application.rng.nextFloat() < deadEndProbability.getProbability()) {
 					Cell walledCell = cell.getRandomNeighbouringWalledCell();
 					cell.setAdjacentTo(walledCell);
 				}

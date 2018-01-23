@@ -23,7 +23,7 @@ public enum Direction {
 		}
 		return opposite;
 	}
-	public static Direction getRandom() {
+	public final static Direction getRandom() {
 		return directions[Application.rng.nextInt(directions.length)];
 	}
 }

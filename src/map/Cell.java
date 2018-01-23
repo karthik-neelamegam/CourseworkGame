@@ -227,8 +227,10 @@ public class Cell extends Entity {
 		double wallX = (dir != Direction.EAST) ? x : x+width;
 		Graphics2D g2d = (Graphics2D) g;
 		Stroke oldStroke = g2d.getStroke();
-	    Stroke stroke = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+		double strokeWeight = wallProportionOfCellDimensions*((dir == Direction.NORTH || dir == Direction.SOUTH) ? height : width); 
+	    Stroke stroke = new BasicStroke((int)strokeWeight, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 	    g2d.setStroke(stroke);
+	    g.setColor(wallColor);
 		if(dir == Direction.NORTH || dir == Direction.SOUTH) {
 			g.drawLine((int)wallX, (int)wallY, (int)(wallX+width), (int)wallY);
 		} else {
