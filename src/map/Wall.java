@@ -3,20 +3,52 @@ package map;
 import java.awt.Color;
 import java.awt.Graphics;
 
+import javax.swing.DropMode;
+
 import logic.Direction;
 import logic.Entity;
 
-public class Wall extends Entity {
+public class Wall {
 	private Cell cell1, cell2;
-	public Wall(Cell cell1, Cell cell2, double x, double y, double width, double height) {
-		super(x, y, width, height);
+	private Direction directionFromCell1ToCell2;
+	
+	public Wall(Cell cell1, Cell cell2, Direction directionFromCell1ToCell2) {
 		this.cell1 = cell1;
 		this.cell2 = cell2;
+		this.directionFromCell1ToCell2 = directionFromCell1ToCell2;
 	}
-	public static Wall createWall(Cell cell1, Cell cell2,
+/*	public static Wall createWall(Cell cell1, Cell cell2, Direction directionFromCell1ToCell2,
 			double proportionOfCellDimensions) {
-		double x = 0, y = 0, width = 0, height = 0;
 		//TODO: get the direction of cell2 to cell1 and then invoke the other method 
+		
+		double x = 0, y = 0, width = 0, height = 0;
+		if(directionFromCell1ToCell2 == Direction.WEST || directionFromCell1ToCell2 == Direction.EAST) {
+			if(directionFromCell1ToCell2 == Direction.WEST) {
+				x = cell1.getX();
+			} else {
+				x = cell1.getX() + cell1.getWidth();
+			}
+			y = cell1.getY();
+			width = cell1.getWidth() * proportionOfCellDimensions;
+			y -= cell1.getHeight() * proportionOfCellDimensions / 2;
+			height = cell1.getHeight() + cell1.getHeight()
+					* proportionOfCellDimensions;
+			x -= width / 2;
+		} else if(directionFromCell1ToCell2 == Direction.NORTH || directionFromCell1ToCell2 == Direction.SOUTH) {
+			if(directionFromCell1ToCell2 == Direction.NORTH) {
+				y = cell1.getY();
+			} else {
+				y = cell1.getY() + cell1.getHeight();
+			}
+			x = cell1.getX();
+			height = cell1.getHeight() * proportionOfCellDimensions;
+			x -= cell1.getWidth() * proportionOfCellDimensions / 2;
+			width = cell1.getWidth() + cell1.getWidth()
+					* proportionOfCellDimensions;
+			y -= height / 2;
+		}
+
+		
 		
 		if (cell1.getX() != cell2.getX()) { //implies the wall is vertical
 			x = Math.max(cell1.getX(), cell2.getX());
@@ -35,10 +67,14 @@ public class Wall extends Entity {
 					* proportionOfCellDimensions;
 			y -= height / 2;
 		}
-		return new Wall(cell1, cell2, x, y, width, height);
+		return new Wall(cell1, cell2, directionFromCell1ToCell2, x, y, width, height);
+	}*/
+	
+	public Direction getDirectionFromCell1ToCell2() {
+		return directionFromCell1ToCell2;
 	}
 	
-	public static Wall createWall(Cell cell, Direction dir,
+/*	public static Wall createWall(Cell cell, Direction dir,
 			double proportionOfCellDimensions) {
 		double x = 0, y = 0, width = 0, height = 0;
 		if(dir == Direction.WEST || dir == Direction.EAST) {
@@ -67,7 +103,7 @@ public class Wall extends Entity {
 			y -= height / 2;
 		}
 		return new Wall(cell, null, x, y, width, height);
-	}
+	}*/
 
 	public Cell getCell1() {
 		return cell1;
@@ -75,7 +111,7 @@ public class Wall extends Entity {
 	public Cell getCell2() {
 		return cell2;
 	}
-	@Override
+/*	@Override
 	public void update(double delta) {
 
 	}
@@ -84,5 +120,5 @@ public class Wall extends Entity {
 	public void render(Graphics g) {
 		g.setColor(Color.BLACK);
 		g.fillRect((int) x, (int) y, (int) width, (int) height);
-	}
+	}*/
 }

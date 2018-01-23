@@ -1,15 +1,17 @@
 package map;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Stroke;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -30,40 +32,32 @@ public class Cell extends Entity {
 	// shape and cells in
 	// edge/corner have fewer
 	// neighbours
-	private class Adjacency {
-		private Direction direction;
-		private Surface surface;
-		public Adjacency(Direction direction, Surface surface) {
-			this.direction = direction;
-			this.surface = surface;
-		}
-		public Direction getDirection() {
-			return direction;
-		}
-		public Surface getSurface() {
-			return surface;
-		}
-	}
-	
-	
+
 	//REFACTOR THIS 
 	//don't need this
 	//private Map<Cell, Direction> neighbouringCellsToDirectionsMap; //need to lookup both ways, bimap overkill because only 4 values, enummap essentially an array anyway, better than hashmap in terms of space?
 	//private Map<Direction, Cell> directionstoNeighbouringCellsMap;
-	private Map<Cell, Direction> adjacentCellsMap; // explain why map vs list (constant look up), never need to look up cell from direction
-	private Map<Cell, Direction> nonAdjacentCellsMap;
+	private Map<Cell, Direction> adjacentCellsToDirectionsMap; // explain why map vs list (constant look up), never need to look up cell from direction
+	//private Map<Cell, Direction> nonAdjacentCellsMap;
+	//private Map<Direction, Cell> directionsToNeighbouringCellsMap;
+	private Map<Direction, Cell> directionsToAdjacentCellsMap;
+	private Map<Cell, Wall> cellsToWallsMap;
+	//NEED TO ARGUE FOR WHY I CHOSE THESE DATA STRUCTURES, TALK ABOUT MEMORY AND ACCESS TIME COMPLEXITY AND WHEN, WHERE AND HOW OFTEN CERTAIN ACCESSES ARE MADE etc.
+	
 	
 	private Checkpoint checkpoint;
 	private Surface surface;
+	private double wallProportionOfCellDimensions;
+	private Color wallColor;
 
-	public Cell(double x, double y, double side, Surface surface) {
+	public Cell(double x, double y, double side, Surface surface, double wallProportionOfCellDimensions, Color wallColor) {
 		super(x, y, side, side);
-		//neighbouringCellsToDirectionsMap = new HashMap<Cell, Direction>();
-		//directionstoNeighbouringCellsMap = new EnumMap<Direction, Cell>(Direction.class);
-		adjacentCellsMap = new HashMap<Cell, Direction>();
-		nonAdjacentCellsMap = new HashMap<Cell, Direction>();
-		adjacentCellsMap = new HashMap<Cell, Direction>();
+		adjacentCellsToDirectionsMap = new HashMap<Cell, Direction>();
+		directionsToAdjacentCellsMap = new EnumMap<Direction, Cell>(Direction.class);
+		cellsToWallsMap = new HashMap<Cell, Wall>();
 		this.surface = surface;
+		this.wallProportionOfCellDimensions = wallProportionOfCellDimensions;
+		this.wallColor = wallColor;
 	}
 
 	public Point getMidpoint(Cell cell) {
@@ -84,47 +78,72 @@ public class Cell extends Entity {
 		return checkpoint;
 	}
 	
-	void addNeighbouringCell(Cell cell, Direction direction) {
-		nonAdjacentCellsMap.put(cell, direction);
-		cell.nonAdjacentCellsMap.put(this, direction.getOpposite());
+	void addNeighbouringCell(Cell neighbouringCell, Direction directionFromThisCellToNeighbouringCell) {
+		Wall wall = new Wall(this, neighbouringCell, directionFromThisCellToNeighbouringCell);
+		cellsToWallsMap.put(neighbouringCell, wall);
+		neighbouringCell.cellsToWallsMap.put(this, wall);
+		//nonAdjacentCellsMap.put(cell, direction);
+		//cell.nonAdjacentCellsMap.put(this, direction.getOpposite());
 /*		neighbouringCellsToDirectionsMap.put(cell, direction);
 		cell.neighbouringCellsToDirectionsMap.put(this, direction.getOpposite());
 		directionstoNeighbouringCellsMap.put(direction, cell);
 		cell.directionstoNeighbouringCellsMap.put(direction.getOpposite(), this);
 */	}
 
-	public Set<Cell> getNonAdjacentCells() {
-		return Collections.unmodifiableSet(nonAdjacentCellsMap.keySet());
+	public Set<Cell> getNeighbouringCells() {
+		return Collections.unmodifiableSet(cellsToWallsMap.keySet());
 	}
 	
-/*	public Cell getNeighbouringCell(Direction direction) {
-		//throws error but i wanna know
-		return directionstoNeighbouringCellsMap.get(direction);
+	public Collection<Wall> getWalls() {
+		return Collections.unmodifiableCollection(cellsToWallsMap.values());
 	}
-*/		
-	void setAdjacentTo(Cell cell) {
+	
+	public void setAdjacentTo(Cell cell) {
 		//nullpointerexception could occur, but if it does i want to know why
-		Direction direction = nonAdjacentCellsMap.get(cell);
-		adjacentCellsMap.put(cell, direction);
-		cell.adjacentCellsMap.put(this, direction.getOpposite());
+		Wall wall = cellsToWallsMap.get(cell);
+		Direction direction = wall.getDirectionFromCell1ToCell2();
+		if(wall.getCell2() == this) {
+			direction = direction.getOpposite();
+		}
+		cellsToWallsMap.put(cell, null);
+		cell.cellsToWallsMap.put(this, null);
+		adjacentCellsToDirectionsMap.put(cell, direction);
+		cell.adjacentCellsToDirectionsMap.put(this, direction.getOpposite());
+		directionsToAdjacentCellsMap.put(direction, cell);
+		cell.directionsToAdjacentCellsMap.put(direction.getOpposite(), this);
 	}
-
-	// talk about this somewhere in technical solution
+	
+	// talk about this somewhere in technical solution (unmodifiable)
 	public Set<Cell> getAdjacentCells() {
-		return Collections.unmodifiableSet(adjacentCellsMap.keySet());
+		return Collections.unmodifiableSet(adjacentCellsToDirectionsMap.keySet());
+	}
+	
+	public Cell getRandomNeighbouringWalledCell() {
+		List<Cell> walledCells = new ArrayList<Cell>();
+		for(Entry<Cell,Wall> entry : cellsToWallsMap.entrySet()) {
+			if(entry.getValue() != null) {
+				walledCells.add(entry.getKey());
+			}
+		}
+		int randIndex = Application.rng.nextInt(walledCells.size());
+		return walledCells.get(randIndex);
 	}
 	
 	// O(n) but set max 4 size so essentially constant time
 	public Cell getRandomAdjacentCell() {
-		int size = adjacentCellsMap.size();
-		int randomIndex = Application.rng.nextInt(size);
+		Set<Cell> adjacentCells = getAdjacentCells();
+		int size = adjacentCells.size();
+		int randIndex = Application.rng.nextInt(size);
 		int i = 0;
-		Iterator<Cell> adjacentCellsIterator = adjacentCellsMap.keySet().iterator();
-		while (i < randomIndex) {
+		Cell selectedCell = null;
+		for(Cell cell : adjacentCells) {
+			if(i == randIndex) {
+				selectedCell = cell;
+				break;
+			}
 			i++;
-			adjacentCellsIterator.next();
 		}
-		return adjacentCellsIterator.next();
+		return selectedCell;
 	}
 
 	
@@ -141,16 +160,12 @@ public class Cell extends Entity {
 	}*/
 	
 	public boolean isAdjacentTo(Cell other) {
-		return adjacentCellsMap.containsKey(other);
+		return adjacentCellsToDirectionsMap.containsKey(other);
 	}
 	
 	public Cell getAdjacentCell(Direction direction) {
-		Cell neighbouringCell = directionstoNeighbouringCellsMap.get(direction);
-		Cell adjacentCell = null;
-		if(adjacentCellsMap.containsKey(neighbouringCell)) {
-			adjacentCell = neighbouringCell;
-		}
-		return adjacentCell;
+		return directionsToAdjacentCellsMap.get(direction);
+		//throws error but wanna know 
 	}
 
 	public boolean isInCell(double px, double py) {
@@ -175,7 +190,7 @@ public class Cell extends Entity {
 	}
 
 	public int getOrder() {
-		return adjacentCellsMap.size();
+		return adjacentCellsToDirectionsMap.size();
 	}
 
 	@Override
@@ -188,13 +203,63 @@ public class Cell extends Entity {
 		//TODO: render surfaces
 		g.setColor(surface.getColor());
 		g.fillRect((int) x, (int) y, (int) width, (int) height);
-		g.setColor(Color.BLACK);
-		g.drawString(""+getX(), (int)(x+width/4), (int)(y+height/4));
-		g.drawString(""+getY(), (int)(x+width/4), (int)(y+3*height/4));
-
 		if (checkpoint != null) {
 			checkpoint.render(g);
 		}
+	}
+	
+	public void renderWalls(Graphics g) {
+		for(Entry<Cell, Wall> entry : cellsToWallsMap.entrySet()) {
+			Wall wall;
+			if((wall = entry.getValue()) != null) {
+				Direction direction = wall.getDirectionFromCell1ToCell2();
+				if(wall.getCell2() == this) {
+					direction = direction.getOpposite();
+				}
+				renderWall(g, direction);
+			}
+		}
+	}
+	
+	private void renderWall(Graphics g, Direction dir) {
+		//double wallX = 0, wallY = 0, wallWidth = 0, wallHeight = 0;
+		double wallY = (dir != Direction.SOUTH) ? y : y+height;
+		double wallX = (dir != Direction.EAST) ? x : x+width;
+		Graphics2D g2d = (Graphics2D) g;
+		Stroke oldStroke = g2d.getStroke();
+	    Stroke stroke = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+	    g2d.setStroke(stroke);
+		if(dir == Direction.NORTH || dir == Direction.SOUTH) {
+			g.drawLine((int)wallX, (int)wallY, (int)(wallX+width), (int)wallY);
+		} else {
+			g.drawLine((int)wallX, (int)wallY, (int)(wallX), (int)(wallY+height));
+		}
+		g2d.setStroke(oldStroke);
+/*		if(dir == Direction.WEST || dir == Direction.EAST) {
+			if(dir == Direction.WEST) {
+				wallX = x;
+			} else {
+				wallX = x + width;
+			}
+			wallY = y;
+			wallWidth = width * wallProportionOfCellDimensions;
+			wallY -= height * wallProportionOfCellDimensions/2;
+			wallHeight = height + width * wallProportionOfCellDimensions;
+			wallX -= wallWidth / 2;
+		} else if(dir == Direction.NORTH || dir == Direction.SOUTH) {
+			if(dir == Direction.NORTH) {
+				wallY = y;
+			} else {
+				wallY = y + height;
+			}
+			wallX = x;
+			wallHeight = height * wallProportionOfCellDimensions;
+			wallX -= width * wallProportionOfCellDimensions/2;
+			wallWidth = width + height * wallProportionOfCellDimensions;
+			wallY -= wallHeight / 2;
+		}
+*/		//g.setColor(wallColor);
+		//g.fillRect((int)wallX, (int)wallY, (int)wallWidth, (int)wallHeight);
 	}
 
 }

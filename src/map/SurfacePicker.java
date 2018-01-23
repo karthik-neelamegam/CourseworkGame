@@ -22,9 +22,9 @@ public class SurfacePicker {
 	
 	public static SurfacePicker getDefaultSurfacePicker() {
 		EnumMap<Surface, Double> surfaceRatios = new EnumMap<Surface, Double>(Surface.class);
-		surfaceRatios.put(Surface.SLOW,0.1);
-		surfaceRatios.put(Surface.NORMAL,0.8);
-		surfaceRatios.put(Surface.FAST,0.1);
+		surfaceRatios.put(Surface.SLOW,1d);
+		surfaceRatios.put(Surface.NORMAL,20d);
+		surfaceRatios.put(Surface.FAST,1d);
 		return new SurfacePicker(surfaceRatios);
 	}
 
