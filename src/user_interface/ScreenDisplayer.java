@@ -51,8 +51,12 @@ public class ScreenDisplayer extends JPanel implements KeyListener {
 			repaint();
 			long timeDifference = System.nanoTime() - previousLoopTime;
 			long sleepTimeInMillis = (optimalLoopTime - timeDifference) / 1000000;
+			if(sleepTimeInMillis < 0) {
+				System.out.println(""+(optimalLoopTime - timeDifference));
+			}
 			try {
 				Thread.sleep(sleepTimeInMillis);
+				
 			} catch (InterruptedException e) {
 				System.out.println(e.getStackTrace());
 			}

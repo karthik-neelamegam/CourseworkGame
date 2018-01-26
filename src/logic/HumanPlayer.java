@@ -8,8 +8,8 @@ import map.Cell;
 
 public class HumanPlayer extends Player implements KeyListener {
 
-	public HumanPlayer(Cell startCell, double baseVel, Color color, int numCheckpointsToReach, double tolerance) {
-		super(startCell, baseVel, color, numCheckpointsToReach, tolerance);
+	public HumanPlayer(Cell startCell, double baseVel, Color color, int numCheckpointsToReach) {
+		super(startCell, baseVel, color, numCheckpointsToReach);
 	}
 
 	@Override

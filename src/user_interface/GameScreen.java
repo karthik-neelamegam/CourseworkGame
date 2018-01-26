@@ -6,7 +6,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 
+import logic.AIPlayer;
 import logic.HumanPlayer;
+import logic.ReducedGraph;
 import map.DeadEndProbability;
 import map.Maze;
 import map.MazeType;
@@ -19,7 +21,7 @@ public class GameScreen implements Screen {
 	private boolean paused;
 	private Maze maze;
 	private HumanPlayer player;
-
+	private AIPlayer ai;
 	public GameScreen(ScreenDisplayer screenDisplayer, GameSettings gameSettings) {
 		this.screenDisplayer = screenDisplayer;
 		this.gameSettings = gameSettings;
@@ -29,7 +31,8 @@ public class GameScreen implements Screen {
 				SurfacePicker.getDefaultSurfacePicker(), Color.YELLOW, 0, 0,
 				9, 9, Color.BLACK, MazeType.KRUSKAL);
 		player = new HumanPlayer(maze.getStartCell(), maze.getCellSide() / 10,
-				Color.GREEN, 10, 0.2);
+				Color.GREEN, 10);
+		ai = new AIPlayer(maze.getEndCell(), maze.getStartCell(), maze.getCellSide() / 10, Color.RED, 10, new ReducedGraph(maze.getStartCell()), 10, 2);
 	}
 
 	@Override
@@ -61,6 +64,7 @@ public class GameScreen implements Screen {
 	public void update(double delta) {
 		if (!paused) {
 			player.update(delta);
+			ai.update(delta);
 		}
 	}
 
@@ -72,6 +76,7 @@ public class GameScreen implements Screen {
 		g.setColor(Color.WHITE);
 		maze.render(g);
 		player.render(g);
+		ai.render(g);
 		if (paused) {
 			renderPauseOverlay(g);
 		}

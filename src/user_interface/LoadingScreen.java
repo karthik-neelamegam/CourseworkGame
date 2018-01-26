@@ -38,12 +38,13 @@ public class LoadingScreen implements Screen {
 
 	@Override
 	public void enter() {
-		Thread initThread = new Thread() {
+/*		Thread initThread = new Thread() {
 			public void run() {
 				initGame();
 			}
 		};
-		initThread.start();
+		initThread.start();*/
+		initGame();
 	}
 
 	@Override

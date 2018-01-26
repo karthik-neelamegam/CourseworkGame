@@ -14,7 +14,7 @@ public class Player extends Sprite {
 	protected int numCheckpointsReached;
 	protected int numCheckpointsToReach;
 	//protected double tolerance; //should be twice the ratio between max velocity and cellside for consistency 
-	public Player(Cell startCell, double baseVel, Color color, int numCheckpointsToReach, double tolerance) {
+	public Player(Cell startCell, double baseVel, Color color, int numCheckpointsToReach) {
 		super(startCell.x, startCell.y, startCell.width, startCell.height, baseVel);
 		this.color = color;
 		//this.tolerance = tolerance;

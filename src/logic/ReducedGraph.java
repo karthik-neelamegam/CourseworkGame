@@ -48,16 +48,20 @@ public class ReducedGraph {
 		// reminder: make everything distance or weight (consistent)
 		// throwing rather than catching so that program stops and you know something
 		// has gone wrong (it's never meant to go wrong)
-		public double getDistanceToAdjacentReducedGraphVertex(Vertex vertex) {
+		public double getDistanceToAdjacentVertex(Vertex vertex) {
 			return adjacentVertices.get(vertex).getTotalWeight();
 		}
 
-		public Edge getReducedGraphEdgeTo(Vertex vertex) {
+		public Edge getEdgeTo(Vertex vertex) {
 			return adjacentVertices.get(vertex);
 		}
 
 		public int getOrder() {
 			return adjacentVertices.size();
+		}
+		
+		public boolean isAdjacentTo(Vertex vertex) {
+			return adjacentVertices.containsKey(vertex);
 		}
 	}
 
@@ -88,19 +92,27 @@ public class ReducedGraph {
 
 	
 	private Map<Cell, Vertex> cellsToVerticesMap;
-	private Set<Vertex> vertices;
-
+	private Set<Vertex> vertices; //constant lookup, map.containsValue is O(n)
+	private Set<Vertex> checkpointVertices;
 	
 	public ReducedGraph(Cell cell) {
 		cellsToVerticesMap = new HashMap<Cell, Vertex>();
-		vertices = new HashSet<Vertex>(cellsToVerticesMap.values());
+		vertices = new HashSet<Vertex>();
+		checkpointVertices = new HashSet<Vertex>();
+		System.out.println("Starting to reduce graph");
 		reduceGraph(new HashSet<Cell>(), new Vertex(cell));
+		System.out.println("ReducedGraph generated");
+		System.out.println("ReducedGraph numVertices: " + vertices.size());
+		System.out.println("ReducedGraph numCheckpointVertices: " + checkpointVertices.size());
 	}
 	
 	public Set<Vertex> getVertices() {
 		return Collections.unmodifiableSet(vertices);
 	}
 	
+	public Set<Vertex> getCheckpointVertices() {
+		return Collections.unmodifiableSet(checkpointVertices);
+	}
 	
 	public Vertex getVertex(Cell cell) {
 		//may throw error, but i wanna know 
@@ -126,18 +138,18 @@ public class ReducedGraph {
 					discoveredCells.add(nextCell);
 					edge.appendCell(nextCell);
 					for (Cell nextCell2 : nextCell.getAdjacentCells()) {
-						if (nextCell != currentVertex.getCell()) {
+						if (nextCell2 != previousCell) {
 							previousCell = nextCell;
 							nextCell = nextCell2;
 							break;
 						}
 					}
 				}
-				
+				discoveredCells.add(nextCell);
 				//check if not a loop (redundant, don't need edge)
 				if (nextCell != currentVertex.getCell()) {
 					edge.appendCell(nextCell);
-					Vertex nextVertex = null;
+					Vertex nextVertex;
 					boolean recurse = false;
 					if (cellsToVerticesMap.containsKey(nextCell)) {
 						nextVertex = cellsToVerticesMap.get(nextCell);
@@ -145,6 +157,9 @@ public class ReducedGraph {
 						nextVertex = new Vertex(nextCell);
 						cellsToVerticesMap.put(nextCell, nextVertex);
 						vertices.add(nextVertex);
+						if(nextVertex.getCell().hasCheckpoint()) {
+							checkpointVertices.add(nextVertex);
+						}
 						discoveredCells.add(nextCell);
 						recurse = true;
 					}

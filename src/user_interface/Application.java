@@ -7,9 +7,10 @@ import java.util.Random;
 import javax.swing.JFrame;
 
 public class Application {
-	public static Random rng = new Random();
+	public static Random rng;
 	//private JFrame frame;
-	public Application(double screenHeightFraction, double aspectRatio, int targetFps) {
+	public Application(double screenHeightFraction, double aspectRatio, int targetFps, long randomSeed) {
+		rng = new Random(randomSeed);
 		JFrame frame = new JFrame("CourseworkGame");
 		ScreenDisplayer screenDisplayer = new ScreenDisplayer(targetFps);
 		GameSettings defaults = GameSettings.getDefaultSettings();
@@ -30,7 +31,7 @@ public class Application {
 	}
 	
 	public static void main(String[] args) {
-		new Application(0.75, 1.33, 60);
+		new Application(0.75, 1.33, 60, 1);
 	}
 
 }

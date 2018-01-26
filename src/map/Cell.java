@@ -59,6 +59,10 @@ public class Cell extends Entity {
 		this.wallProportionOfCellDimensions = wallProportionOfCellDimensions;
 		this.wallColor = wallColor;
 	}
+	
+	public Direction getDirectionTo(Cell cell) {
+		return adjacentCellsToDirectionsMap.get(cell);
+	}
 
 	public Point getMidpoint(Cell cell) {
 		int midX = (int) ((float) ((x + cell.x + (float) width / 2 + (float) cell.width / 2)) / 2);

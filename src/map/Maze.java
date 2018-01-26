@@ -45,6 +45,21 @@ public class Maze extends Entity {
 		placeCheckpoints(numCheckpoints,
 				numCheckpointAttempts, checkpointColor);
 		System.out.println("Checkpoints placed");
+		//temp
+		int numVertices = 0, nCheckpoints = 0;
+		for(int i = 0; i < cells.length; i++) {
+			for(int j = 0; j < cells[i].length; j++) {
+				Cell cell = cells[i][j];
+				if(cell.getOrder() != 2 || cell.hasCheckpoint()) {
+					numVertices++;
+					if(cell.hasCheckpoint()) {
+						nCheckpoints++;
+					}
+				}
+			}
+		}
+		System.out.println("RequiredNumberOfVertices: " + numVertices);
+		System.out.println("RequiredNumberOfCheckpoints: " + nCheckpoints);
 	}
 
 	public Cell getStartCell() {
