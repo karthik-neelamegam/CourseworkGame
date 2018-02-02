@@ -1,12 +1,12 @@
 package logic;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -16,8 +16,9 @@ import logic.ReducedGraph.Edge;
 import logic.ReducedGraph.Vertex;
 import map.Cell;
 import user_interface.Application;
-import dsa.CommonAlgorithms;
+import user_interface.Difficulty;
 import dsa.DisjointSet;
+import dsa.FibonacciHeap;
 
 public class AIPlayer extends Player {
 	public class CheckpointVertexPair {
@@ -45,6 +46,7 @@ public class AIPlayer extends Player {
 		}
 
 	}
+
 	public class Path {
 		private List<Vertex> pathVertices;
 		private double totalWeight;
@@ -57,8 +59,7 @@ public class AIPlayer extends Player {
 		public void appendVertex(Vertex vertex) {
 			pathVertices.add(vertex);
 			if (pathVertices.size() > 1) {
-				totalWeight += vertex
-						.getDistanceToAdjacentVertex(pathVertices.get(pathVertices.size() - 1));
+				totalWeight += vertex.getDistanceToAdjacentVertex(pathVertices.get(pathVertices.size() - 2));
 			}
 		}
 
@@ -66,22 +67,29 @@ public class AIPlayer extends Player {
 			return totalWeight;
 		}
 
-		public Vertex getReducedGraphVertex1() {
+		public Vertex getVertex1() {
 			return pathVertices.get(0);
 		}
 
-		public Vertex getReducedGraphVertex2() {
+		public Vertex getVertex2() {
 			return pathVertices.get(pathVertices.size() - 1);
 		}
-
-		public List<Cell> getCellPath() {
+		
+		public List<Cell> getCellPath(Vertex startVertex) {
 			List<Cell> cellPath = new ArrayList<Cell>();
-			System.out.println("path vertices size: "+ pathVertices.size() );
-			for (int i = 0; i < pathVertices.size() - 1; i++) {
+			int inclusiveStartIndex = 0, exclusiveEndIndex = pathVertices.size()-1, increment = 1;
+			if(pathVertices.get(pathVertices.size()-1) == startVertex) {
+				inclusiveStartIndex = pathVertices.size()-1;
+				exclusiveEndIndex = 0;
+				increment = -1;
+			} else if(pathVertices.get(0) != startVertex){
+				return null;
+			}
+			for (int i = inclusiveStartIndex; i != exclusiveEndIndex; i+=increment) {
 				Vertex currentVertex = pathVertices.get(i);
-				Vertex nextVertex = pathVertices.get(i + 1);
+				Vertex nextVertex = pathVertices.get(i + increment);
 				Edge edge = currentVertex.getEdgeTo(nextVertex);
-				List<Cell> edgeCells = edge.getCells();
+				List<Cell> edgeCells = edge.getCells(currentVertex.getCell());
 				for (Cell cell : edgeCells) {
 					cellPath.add(cell);
 				}
@@ -99,29 +107,29 @@ public class AIPlayer extends Player {
 	
 	private List<Cell> journey;
 	private int currentCellIndex;
-	private Direction currentDirection;
-	public AIPlayer(Cell startCell, Cell endCell, double baseVel, Color color,
-			int numCheckpointsToReach, ReducedGraph rg, int numRNNs, int numRNNCands) {
-		super(startCell, baseVel, color, numCheckpointsToReach);
+	public AIPlayer(Cell startCell, Cell endCell, double baseVel, Color color, String name, double playerProportionOfCellDimensions, int numCheckpointsToReach,
+			ReducedGraph rg, Difficulty difficulty) {
+		super(startCell, endCell, baseVel, color, name, playerProportionOfCellDimensions, numCheckpointsToReach);
 		this.rg = rg;
 		checkpointVertices = rg.getCheckpointVertices();
 		initCheckpointGraph();
 		System.out.println("Initialised checkpoint graph");
-		journey = getSemiOptimalJourneyThroughCheckpoints(rg.getVertex(startCell), rg.getVertex(endCell), numRNNs, numRNNCands);
+		journey = cellJourney(rg.getVertex(startCell), rg.getVertex(endCell), difficulty);
 		System.out.println(journey.size());
 		currentCellIndex = 0;
-		currentDirection = null;
 	}
 	
 	@Override
-	public void update(double delta) {
+	public void update(double delta) {		
 		Cell nextJourneyCell = null;
 		if(currentCellIndex < journey.size()-1) {
 			Cell currentJourneyCell = journey.get(currentCellIndex);
 			nextJourneyCell = journey.get(currentCellIndex+1);
-			Direction targetDirection = currentJourneyCell.getDirectionTo(nextJourneyCell);
-			if(targetDirection != currentDirection) {
-				changeDirection(targetDirection);
+			if(currentJourneyCell != nextJourneyCell) {
+				Direction targetDirection = currentJourneyCell.getDirectionTo(nextJourneyCell);
+				if(targetDirection != currentDirection) {
+					changeDirection(targetDirection);
+				}
 			}
 		}
 		super.update(delta);
@@ -131,61 +139,45 @@ public class AIPlayer extends Player {
 	}
 	
 	private void initCheckpointGraph() {
-		Set<Vertex> vertices = rg.getVertices();
-		System.out.println("CheckpointVertices Size: " + checkpointVertices.size());
 		shortestPathsBetweenCheckpoints = new HashMap<CheckpointVertexPair, Path>();
-		
-		//int numDoneCheckpointVertices = 0;
-		//int numCheckpoints = checkpointVertices.size();
+		//Set<Vertex> doneCheckpoints = new HashSet<Vertex>();
 		for (Vertex sourceVertex : checkpointVertices) {
-			
 			//Dijkstra's from each checkpointVertex
-			final Map<Vertex, Double> distancesFromSourceMap = new HashMap<Vertex, Double>();
+			Map<Vertex, Double> distancesFromSourceMap = new HashMap<Vertex, Double>();
 			Map<Vertex, Vertex> previousVerticesMap = new HashMap<Vertex, Vertex>();
-			class VertexComparator implements Comparator<Vertex> {
-				@Override
-				public int compare(Vertex arg0, Vertex arg1) {
-					return Double.compare(distancesFromSourceMap.get(arg0), distancesFromSourceMap.get(arg1));
-				}
-			}
-			PriorityQueue<Vertex> vertexQueue = new PriorityQueue<Vertex>(
-					new VertexComparator());
-			for (Vertex vertex : vertices) {
-				distancesFromSourceMap.put(vertex, Double.MAX_VALUE);
-				previousVerticesMap.put(vertex, null);
+			Map<Vertex, FibonacciHeap.Entry<Vertex>> queueEntriesMap = new HashMap<Vertex, FibonacciHeap.Entry<Vertex>>();
+			FibonacciHeap<Vertex> vertexQueue = new FibonacciHeap<Vertex>();
+			Set<Vertex> visitedVertices = new HashSet<Vertex>();
+			//Set<Vertex> visitedCheckpoints = new HashSet<Vertex>(doneCheckpoints);
+			for (Vertex vertex : rg.getVertices()) {
+				distancesFromSourceMap.put(vertex, 1000000000d);
+				queueEntriesMap.put(vertex, vertexQueue.enqueue(vertex, distancesFromSourceMap.get(vertex)));
 			}
 			distancesFromSourceMap.put(sourceVertex, 0.0);
-			vertexQueue.add(sourceVertex);
-			//int numVisitedCheckpointVertices = 0;
-			Set<Vertex> visitedVertices = new HashSet<Vertex>();
-			while (!vertexQueue.isEmpty()) {
-					//&& numVisitedCheckpointVertices < numCheckpoints - numDoneCheckpointVertices) {
-				Vertex currentVertex = vertexQueue.poll();
-				visitedVertices.add(currentVertex);
-				/*if (checkpointVertices.contains(currentVertex)) {
-					if (!shortestPathsBetweenCheckpoints.containsKey(
-							new CheckpointVertexPair(sourceVertex, currentVertex))) {
-						numVisitedCheckpointVertices++;
+			vertexQueue.decreaseKey(queueEntriesMap.get(sourceVertex), distancesFromSourceMap.get(sourceVertex));
+			while (!vertexQueue.isEmpty()) {// && checkpointVertices.size() != visitedCheckpoints.size()) {				
+				FibonacciHeap.Entry<Vertex> currentVertexEntry = vertexQueue.dequeueMin();
+				Vertex currentVertex = currentVertexEntry.getValue();
+				if(!visitedVertices.contains(currentVertex)) {
+					visitedVertices.add(currentVertex);
+/*					if(checkpointVertices.contains(currentVertex)) {
+						visitedCheckpoints.add(currentVertex);
 					}
-				}*/
-				for (Vertex neighbour : currentVertex.getAdjacentVertices()) {
-					if(!visitedVertices.contains(neighbour)) {
-						double altWeight = distancesFromSourceMap.get(currentVertex)
-								+ currentVertex.getDistanceToAdjacentVertex(neighbour);
-						System.out.println("AltWeight: "+ altWeight);
-						if(neighbour == null) {
-							System.out.println("neighbour is NULL");
-						}
-						if (altWeight < distancesFromSourceMap.get(neighbour)) {
-							distancesFromSourceMap.put(neighbour, altWeight);
-							previousVerticesMap.put(neighbour, currentVertex);
-							vertexQueue.add(neighbour);
+*/					for (Vertex neighbour : currentVertex.getAdjacentVertices()) {
+						if(!visitedVertices.contains(neighbour)) {
+							double altWeight = distancesFromSourceMap.get(currentVertex)
+									+ currentVertex.getDistanceToAdjacentVertex(neighbour);
+							if (altWeight < distancesFromSourceMap.get(neighbour)) {
+								distancesFromSourceMap.put(neighbour, altWeight);
+								previousVerticesMap.put(neighbour, currentVertex);
+								vertexQueue.decreaseKey(queueEntriesMap.get(neighbour), altWeight);
+							}
 						}
 					}
 				}
 			}
-			for (Vertex vertex : vertices) {
-				if (checkpointVertices.contains(vertex)) {
+			for (Vertex vertex : checkpointVertices) {
+				if (vertex != sourceVertex) {
 					if (!shortestPathsBetweenCheckpoints.containsKey(
 							new CheckpointVertexPair(sourceVertex, vertex))) {
 						Path path = new Path();
@@ -195,9 +187,6 @@ public class AIPlayer extends Player {
 							length++;
 							path.appendVertex(currentVertex);
 							Vertex previousVertex = previousVerticesMap.get(currentVertex);
-							if(!currentVertex.isAdjacentTo(previousVertex) && previousVertex != null) {
-								System.out.println("What?");
-							}
 							currentVertex = previousVertex;
 						}
 						System.out.println("path length: " +length);
@@ -206,7 +195,7 @@ public class AIPlayer extends Player {
 					}
 				}
 			}
-			//numDoneCheckpointVertices++;
+			//doneCheckpoints.add(sourceVertex);
 		}
 	}
 	
@@ -214,7 +203,7 @@ public class AIPlayer extends Player {
 		return shortestPathsBetweenCheckpoints.get(new CheckpointVertexPair(v1, v2)).getTotalWeight();
 	}
 	
-	private double calculateTotalJourneyDistance(List<Vertex> journey) {
+	private double calculateTotalCheckpointVertexJourneyDistance(List<Vertex> journey) {
 		double totalDistance = 0;
 		for (int i = 0; i < journey.size() - 1; i++) {
 			Vertex currentVertex = journey.get(i);
@@ -223,149 +212,240 @@ public class AIPlayer extends Player {
 		}
 		return totalDistance;
 	}
-
-	private List<Cell> getSemiOptimalJourneyThroughCheckpoints(Vertex startVertex, Vertex endVertex, int numRNNs, int numRNNCands) {
-		List<Vertex> rNNJourney = randomisedNearestNeighbourJourney(startVertex, endVertex, 1);
-		System.out.println("rNNJourney size: " + rNNJourney.size());
-		List<Vertex> twoOptGreedyJourney = twoOpt(rNNJourney);
-		double minTotalDistance = calculateTotalJourneyDistance(twoOptGreedyJourney);
-		List<Vertex> bestCheckpointVertexJourney = twoOptGreedyJourney;
-		/*for (int i = 0; i < numRNNs; i++) {
-			List<Vertex> twoOptRNNJourney = twoOpt(randomisedNearestNeighbourJourney(startVertex, endVertex, numRNNCands));
-			double totalDistance = calculateTotalJourneyDistance(twoOptRNNJourney);
-			if (totalDistance < minTotalDistance) {
-				minTotalDistance = totalDistance;
-				bestCheckpointVertexJourney = twoOptRNNJourney;
-			}
-		}*/
-		System.out.println("TWO OPT SIZE: " + twoOptGreedyJourney.size());
-		List<Cell> bestCellJourney = new ArrayList<Cell>();
-		for (int i = 0; i < bestCheckpointVertexJourney.size() - 1; i++) {
-			Vertex currentCheckpointVertex = bestCheckpointVertexJourney.get(i);
-			Vertex nextCheckpointVertex = bestCheckpointVertexJourney.get(i + 1);
-			CheckpointVertexPair cvp = new CheckpointVertexPair(currentCheckpointVertex, nextCheckpointVertex);
-			if(!shortestPathsBetweenCheckpoints.containsKey(cvp)) {
-				System.out.println("WHAT?");
-			}
-			bestCellJourney.addAll(shortestPathsBetweenCheckpoints.get(new CheckpointVertexPair(currentCheckpointVertex, nextCheckpointVertex)).getCellPath());
+	
+	private List<Vertex> easyCheckpointVertexJourney(Vertex startVertex, Vertex endVertex) {
+		List<Vertex> journey = null;
+		if (checkpointVertices.contains(startVertex) && checkpointVertices.contains(endVertex)) {
+			journey = new ArrayList<Vertex>(checkpointVertices);
+			Collections.shuffle(journey, Application.rng);
+			Collections.swap(journey, 0, journey.indexOf(startVertex));
+			Collections.swap(journey, journey.size()-1, journey.indexOf(endVertex));
 		}
-		System.out.println("bestcelljourney size:  " + bestCellJourney.size());
-		return bestCellJourney;
+		return journey;
+	}
+	
+	private List<Vertex> mediumCheckpointVertexJourney(Vertex startVertex, Vertex endVertex) {
+		//need to move these into parameters/constants
+		final int numRNNCands = 1;
+		return randomisedNearestNeighbourCheckpointVertexJourney(startVertex, endVertex, numRNNCands);
+	}
+	
+	private List<Vertex> hardCheckpointVertexJourney(Vertex startVertex, Vertex endVertex) {
+		System.out.println("REACHED HARDJOURNEY");
+		List<Vertex> greedyJourney = twoOpt(greedyCheckpointVertexJourney(startVertex, endVertex));
+		double minTotalDistance = calculateTotalCheckpointVertexJourneyDistance(greedyJourney);
+		List<Vertex> bestJourney = greedyJourney;
+		//need to move these into parameters/constants
+		final int numRNNCands = 2;
+		final int numRNNs = 100;
+		for(int i = 0; i < numRNNs; i++) {
+			List<Vertex> rNNJourney = twoOpt(randomisedNearestNeighbourCheckpointVertexJourney(startVertex, endVertex, numRNNCands));
+			double totalDistance = calculateTotalCheckpointVertexJourneyDistance(rNNJourney);
+			if(totalDistance < minTotalDistance) {
+				minTotalDistance = totalDistance;
+				bestJourney = rNNJourney;
+			}
+		}
+		return bestJourney;
+	}
+	
+	private List<Cell> cellJourney(Vertex startVertex, Vertex endVertex, Difficulty difficulty) {
+		List<Vertex> checkpointVertexJourney;
+		switch(difficulty) {
+		case EASY: checkpointVertexJourney = easyCheckpointVertexJourney(startVertex, endVertex); break;
+		case MEDIUM: checkpointVertexJourney = mediumCheckpointVertexJourney(startVertex, endVertex); break;
+		case HARD: checkpointVertexJourney = hardCheckpointVertexJourney(startVertex, endVertex); break;
+		default: checkpointVertexJourney = null;
+		}
+		List<Cell> cellJourney = new ArrayList<Cell>();
+		for (int i = 0; i < checkpointVertexJourney.size() - 1; i++) {
+			Vertex currentCheckpointVertex = checkpointVertexJourney.get(i);
+			Vertex nextCheckpointVertex = checkpointVertexJourney.get(i + 1);
+			List<Cell> cellPath = shortestPathsBetweenCheckpoints.get(new CheckpointVertexPair(currentCheckpointVertex, nextCheckpointVertex)).getCellPath(currentCheckpointVertex);
+			cellJourney.addAll(cellPath);
+		}
+		return cellJourney;
 	}
 
-	private List<Vertex> randomisedNearestNeighbourJourney(Vertex startVertex, Vertex endVertex, int numCands) {
+	private List<Vertex> randomisedNearestNeighbourCheckpointVertexJourney(Vertex startVertex, Vertex endVertex, int numCands) {
 		// defensive programming (ctrl-f Exception or throw), prob can get rid of it, if you decide to keep it, check for it elsewhere
-		/*if (!checkpointVertices.contains(startVertex) || !checkpointVertices.contains(endVertex)) {
-			throw new EndpointCellsException();
-		} */
-		Set<Vertex> unselectedVertices = new HashSet<Vertex>(checkpointVertices);
-		List<Vertex> journey = new ArrayList<Vertex>();
-		unselectedVertices.remove(startVertex);
-		unselectedVertices.remove(endVertex);
-		journey.add(startVertex);
-		Vertex currentVertex = startVertex;
-		class Candidate implements Comparable<Candidate> {
-			Vertex vertex;
-			double weight;
+		List<Vertex> journey = null;
+		if (checkpointVertices.contains(startVertex) && checkpointVertices.contains(endVertex)) {
+			Set<Vertex> unselectedVertices = new HashSet<Vertex>(checkpointVertices);
+			journey = new ArrayList<Vertex>();
+			unselectedVertices.remove(startVertex);
+			unselectedVertices.remove(endVertex);
+			journey.add(startVertex);
+			Vertex currentVertex = startVertex;
+			class Candidate implements Comparable<Candidate> {
+				Vertex vertex;
+				double weight;
 
-			public Candidate(Vertex node, double weight) {
-				this.vertex = node;
-				this.weight = weight;
-			}
+				public Candidate(Vertex node, double weight) {
+					this.vertex = node;
+					this.weight = weight;
+				}
 
-			public Vertex getReducedGraphVertex() {
-				return vertex;
-			}
+				public Vertex getReducedGraphVertex() {
+					return vertex;
+				}
 
-			@Override
-			public int compareTo(Candidate other) {
-				return Double.compare(other.weight, weight);
-			}
-		}
-
-		while (unselectedVertices.size() > 0) {
-			PriorityQueue<Candidate> candidates = new PriorityQueue<Candidate>();
-			for (Vertex vertex : unselectedVertices) {
-				double distance = getShortestPathDistanceBetweenCheckpoints(currentVertex, vertex);
-				Candidate cand = new Candidate(vertex, distance);
-				if (candidates.size() < numCands) {
-					candidates.add(cand);
-				} else if (cand.compareTo(candidates.peek()) > 0) {
-					candidates.poll();
-					candidates.add(cand);
+				@Override
+				public int compareTo(Candidate other) {
+					return Double.compare(other.weight, weight);
 				}
 			}
-			int randIndex = Application.rng.nextInt(candidates.size());
-			int i = 0;
-			Candidate selectedCandidate = null;
-			for(Candidate cand : candidates) {
-				if(i == randIndex) {
-					selectedCandidate = cand;
-					break;
+
+			while (unselectedVertices.size() > 0) {
+				PriorityQueue<Candidate> candidates = new PriorityQueue<Candidate>();
+				for (Vertex vertex : unselectedVertices) {
+					double distance = getShortestPathDistanceBetweenCheckpoints(currentVertex, vertex);
+					Candidate cand = new Candidate(vertex, distance);
+					if (candidates.size() < numCands) {
+						candidates.add(cand);
+					} else if (cand.compareTo(candidates.peek()) > 0) {
+						candidates.poll();
+						candidates.add(cand);
+					}
 				}
-				i++;
+				int randIndex = Application.rng.nextInt(candidates.size());
+				int i = 0;
+				Candidate selectedCandidate = null;
+				for(Candidate cand : candidates) {
+					if(i == randIndex) {
+						selectedCandidate = cand;
+						break;
+					}
+					i++;
+				}
+				Vertex selectedVertex = selectedCandidate.getReducedGraphVertex();
+				unselectedVertices.remove(selectedVertex);
+				journey.add(selectedVertex);
+				currentVertex = selectedVertex;
 			}
-			Vertex selectedVertex = selectedCandidate.getReducedGraphVertex();
-			unselectedVertices.remove(selectedVertex);
-			journey.add(selectedVertex);
-			currentVertex = selectedVertex;
+			journey.add(endVertex);
 		}
-		journey.add(endVertex);
 		return journey;
 	}
 
-	private List<Vertex> greedyJourney(Vertex startVertex, Vertex endVertex) {
-		/*if (!checkpointVertices.contains(startVertex) || !checkpointVertices.contains(endVertex)) {
-			throw new EndpointCellsException();
-		}*/
-		List<Path> paths = new ArrayList<Path>(shortestPathsBetweenCheckpoints.values());
-		class ReducedGraphPathComparator implements Comparator<Path> {
-
-			@Override
-			public int compare(Path o1, Path o2) {
-				return Double.compare(o1.getTotalWeight(), o2.getTotalWeight());
+	private void merge(List<Path> paths, int startIndex, int midIndex, int endIndex) {
+		List<Path> leftHalf = new ArrayList<Path>();
+		List<Path> rightHalf = new ArrayList<Path>();
+		for (int i = startIndex; i < midIndex; i++) {
+			leftHalf.add(paths.get(i));
+		}
+		for (int i = midIndex; i < endIndex; i++) {
+			rightHalf.add(paths.get(i));
+		}
+		int leftIndex = 0;
+		int rightIndex = 0;
+		int insertIndex = startIndex;
+		while (leftIndex < leftHalf.size() && rightIndex < rightHalf.size()) {
+			if(leftHalf.get(leftIndex).getTotalWeight() < rightHalf.get(rightIndex).getTotalWeight()) {
+				paths.set(insertIndex, leftHalf.get(leftIndex));
+				leftIndex++;
+			} else {
+				paths.set(insertIndex, rightHalf.get(rightIndex));
+				rightIndex++;
 			}
+			insertIndex++;
+		}
+		while(leftIndex < leftHalf.size()) {
+			paths.set(insertIndex, leftHalf.get(leftIndex));
+			leftIndex++;
+			insertIndex++;
+		} 
+		while(rightIndex < rightHalf.size()) {
+			paths.set(insertIndex, rightHalf.get(rightIndex));
+			rightIndex++;
+			insertIndex++;
+		}
+	}
 
+	private void mergeSort(List<Path> paths, int startIndex, int endIndex) {
+		if (startIndex < endIndex-1) {
+			int midIndex = (startIndex + endIndex) / 2;
+			mergeSort(paths, startIndex, midIndex);
+			mergeSort(paths, midIndex, endIndex);
+			merge(paths, startIndex, midIndex, endIndex);
 		}
-		Collections.sort(paths, new ReducedGraphPathComparator());
-		//CommonAlgorithms.mergeSort(paths, new ReducedGraphPathComparator());
-		DisjointSet<Vertex> verticesDisjointSet = new DisjointSet<Vertex>(checkpointVertices);
-		List<Vertex> journey = new ArrayList<Vertex>();
-		List<Path> addedPaths = new ArrayList<Path>();
-		//use arraylist because can either have 2 or 1 adjacent cells (variable number)
-		HashMap<Vertex, ArrayList<Vertex>> adjacencyListMap = new HashMap<Vertex, ArrayList<Vertex>>();
-		for (Vertex vertex : checkpointVertices) {
-			adjacencyListMap.put(vertex, new ArrayList<Vertex>());
-		}
-		for (int i = 0; i < paths.size() && addedPaths.size() < checkpointVertices.size(); i++) {
-			Path path = paths.get(i);
-			Vertex vertex1 = path.getReducedGraphVertex1();
-			Vertex vertex2 = path.getReducedGraphVertex2();
-			int vertex1Order = vertex1.getOrder();
-			int vertex2Order = vertex2.getOrder();
-			boolean vertex1IsEndpoint = vertex1 == startVertex || vertex1 == endVertex;
-			boolean vertex2IsEndpoint = vertex2 == startVertex || vertex2 == endVertex;
-			boolean vertex1IsMaxOrder = vertex1Order == 2 || (vertex1IsEndpoint && vertex1Order == 1);
-			boolean vertex2IsMaxOrder = vertex2Order == 2 || (vertex2IsEndpoint && vertex2Order == 1);
-			boolean verticesAreJoined = verticesDisjointSet.areJoined(vertex1, vertex2);
-			if (!vertex1IsMaxOrder && !vertex2IsMaxOrder && !verticesAreJoined) {
-				verticesDisjointSet.union(vertex1, vertex2);
-				addedPaths.add(path);
-				adjacencyListMap.get(vertex1).add(vertex2);
-				adjacencyListMap.get(vertex2).add(vertex1);
+	}
+	
+	private List<Vertex> greedyCheckpointVertexJourney(Vertex startVertex, Vertex endVertex) {
+		List<Vertex> journey = null;
+		if (checkpointVertices.contains(startVertex) && checkpointVertices.contains(endVertex)) {
+			List<Path> paths = new ArrayList<Path>(shortestPathsBetweenCheckpoints.values());
+			class PathComparator implements Comparator<Path> {
+				@Override
+				public int compare(Path path1, Path path2) {
+					return Double.compare(path1.getTotalWeight(), path2.getTotalWeight());
+				}
 			}
-		}
-		journey.add(startVertex);
-		Vertex previousVertex = null;
-		Vertex currentVertex = startVertex;
-		while (journey.size() < checkpointVertices.size()) {
-			ArrayList<Vertex> adjacencyList = adjacencyListMap.get(currentVertex);
-			for (Vertex vertex : adjacencyList) {
-				if (vertex != previousVertex) {
-					journey.add(vertex);
-					previousVertex = currentVertex;
-					currentVertex = vertex;
-					break;
+			Collections.sort(paths, new PathComparator());
+			mergeSort(paths, 0, paths.size());
+			//CommonAlgorithms.mergeSort(paths, new ReducedGraphPathComparator());
+			DisjointSet<Vertex> verticesDisjointSet = new DisjointSet<Vertex>(checkpointVertices);
+			journey = new ArrayList<Vertex>();
+			
+			//use arraylist because can either have 2 or 1 adjacent cells (variable number)
+			HashMap<Vertex, ArrayList<Vertex>> adjacencyListMap = new HashMap<Vertex, ArrayList<Vertex>>();
+			for (Vertex vertex : checkpointVertices) {
+				adjacencyListMap.put(vertex, new ArrayList<Vertex>());
+			}
+			int i = 0;
+			int pathsAdded = 0;
+			for (i = 0; i < paths.size() && pathsAdded < checkpointVertices.size()-3; i++) {
+				Path path = paths.get(i);
+				Vertex vertex1 = path.getVertex1();
+				Vertex vertex2 = path.getVertex2();
+				if(vertex1 != startVertex && vertex1 != endVertex && vertex2 != startVertex && vertex2 != endVertex) {
+					int vertex1Order = adjacencyListMap.get(vertex1).size();
+					int vertex2Order = adjacencyListMap.get(vertex2).size();
+					boolean vertex1IsMaxOrder = vertex1Order == 2;
+					boolean vertex2IsMaxOrder = vertex2Order == 2;
+					boolean verticesAreJoined = verticesDisjointSet.areJoined(vertex1, vertex2);
+					if (!vertex1IsMaxOrder && !vertex2IsMaxOrder && !verticesAreJoined) {
+						verticesDisjointSet.union(vertex1, vertex2);
+						pathsAdded++;
+						adjacencyListMap.get(vertex1).add(vertex2);
+						adjacencyListMap.get(vertex2).add(vertex1);
+					}
+				}
+			}
+			Vertex vertex1 = null, vertex2 = null;
+			for(Vertex vertex : checkpointVertices) {
+				if(adjacencyListMap.get(vertex).size()==1) {
+					if(vertex1 == null) {
+						vertex1 = vertex;
+					} else {
+						vertex2 = vertex;
+						break;
+					}
+				}
+			}
+			if(getShortestPathDistanceBetweenCheckpoints(vertex1, startVertex) + getShortestPathDistanceBetweenCheckpoints(vertex2, endVertex) < getShortestPathDistanceBetweenCheckpoints(vertex2, startVertex) + getShortestPathDistanceBetweenCheckpoints(vertex1, endVertex)) {
+				adjacencyListMap.get(vertex1).add(startVertex);
+				adjacencyListMap.get(startVertex).add(vertex1);
+				adjacencyListMap.get(vertex2).add(endVertex);
+				adjacencyListMap.get(endVertex).add(vertex2);
+			} else {
+				adjacencyListMap.get(vertex2).add(startVertex);
+				adjacencyListMap.get(startVertex).add(vertex2);
+				adjacencyListMap.get(vertex1).add(endVertex);
+				adjacencyListMap.get(endVertex).add(vertex1);
+			}
+			journey.add(startVertex);
+			Vertex previousVertex = null;
+			Vertex currentVertex = startVertex;
+			while (journey.size() < checkpointVertices.size()) {
+				ArrayList<Vertex> adjacencyList = adjacencyListMap.get(currentVertex);
+				for (Vertex vertex : adjacencyList) {
+					if (vertex != previousVertex) {
+						journey.add(vertex);
+						previousVertex = currentVertex;
+						currentVertex = vertex;
+						break;
+					}
 				}
 			}
 		}
@@ -389,19 +469,21 @@ public class AIPlayer extends Player {
 	private List<Vertex> twoOpt(List<Vertex> journey) {
 		List<Vertex> currentJourney = journey;
 		double minChange;
+		int minI, minJ;
 		do {
 			minChange = 0;
-			int minI = -1, minJ = -1;
-			for (int i = 1; i < journey.size() - 2; i++) {
-				for (int j = i + 1; j < journey.size() - 1; j++) {
+			minI = -1;
+			minJ = -1;
+			for (int i = 2; i < journey.size() - 3; i++) {
+				for (int j = i + 1; j < journey.size() - 2; j++) {
 					Vertex a = currentJourney.get(i - 1);
 					Vertex b = currentJourney.get(i);
 					Vertex c = currentJourney.get(j);
 					Vertex d = currentJourney.get(j + 1);
 					double previousWeight = getShortestPathDistanceBetweenCheckpoints(a, b)
 							+ getShortestPathDistanceBetweenCheckpoints(c, d);
-					double afterWeight = getShortestPathDistanceBetweenCheckpoints(a, d)
-							+ getShortestPathDistanceBetweenCheckpoints(c, b);
+					double afterWeight = getShortestPathDistanceBetweenCheckpoints(a, c)
+							+ getShortestPathDistanceBetweenCheckpoints(b, d);
 					double change = afterWeight - previousWeight;
 					if (change < minChange) {
 						minChange = change;
@@ -410,10 +492,10 @@ public class AIPlayer extends Player {
 					}
 				}
 			}
-			if(minChange != 0) {
+			if(minI != -1) {
 				currentJourney = twoOptSwap(currentJourney, minI, minJ);
 			}
-		} while (minChange != 0);
+		} while (minI != -1);
 		return currentJourney;
 	}
 	

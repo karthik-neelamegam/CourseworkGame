@@ -1,24 +1,30 @@
 package user_interface;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.RenderingHints.Key;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainMenuScreen implements Screen {
 	private ScreenDisplayer screenDisplayer;
-	private GameSettings gameSettings;
-	public MainMenuScreen(ScreenDisplayer screenDisplayer, GameSettings gameSettings) {
+	public MainMenuScreen(ScreenDisplayer screenDisplayer) {
 		this.screenDisplayer = screenDisplayer;
-		this.gameSettings = gameSettings;
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
-		case KeyEvent.VK_SPACE:
-			screenDisplayer.setScreen(new LoadingScreen(screenDisplayer, gameSettings));
+		case KeyEvent.VK_1:
+			screenDisplayer.setScreen(new DifficultySelectScreen(screenDisplayer));
 			break;
+		case KeyEvent.VK_2:
+			screenDisplayer.setScreen(new LevelSelectScreen(screenDisplayer, GameMode.TWO_PLAYER));
+			break;
+		case KeyEvent.VK_3:
+			screenDisplayer.setScreen(new LevelSelectScreen(screenDisplayer, GameMode.TRAINING));
 		}
 	}
 
@@ -37,7 +43,6 @@ public class MainMenuScreen implements Screen {
 	@Override
 	public void leave() {
 		screenDisplayer = null;
-		gameSettings = null;
 	}
 
 	@Override
@@ -46,13 +51,43 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void render(Graphics g) {
+		Color lastColor = g.getColor();
+		Font baseFont = g.getFont();
+		Font titleFont = new Font("serif", Font.ITALIC, 60);
+		String titleMessage = "MazeRace";
+		String instructionsMessage = "Select a game mode (Press the key indicated in brackets): ";
+		List<String> gameModeMessages = new ArrayList<String>();
+		gameModeMessages.add("[1] Against AI");
+		gameModeMessages.add("[2] Two Player");
+		gameModeMessages.add("[3] Training");
+		FontMetrics fontMetrics = g.getFontMetrics();
+		int maxWidth = 0;
+		for (String levelMessage : gameModeMessages) {
+			int width = fontMetrics.stringWidth(levelMessage);
+			if (width > maxWidth) {
+				maxWidth = width;
+			}
+		}
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, screenDisplayer.getWidth(),
 				screenDisplayer.getHeight());
+		g.setColor(Color.YELLOW);
+		g.setFont(titleFont);
+		g.drawString(titleMessage, (screenDisplayer.getWidth()-g.getFontMetrics(titleFont).stringWidth(titleMessage))/2, screenDisplayer.getHeight()/(gameModeMessages.size() + 3));
+		g.setFont(baseFont);
 		g.setColor(Color.WHITE);
-		g.drawString("Press SPACE to start!",
-				screenDisplayer.getWidth() / 2 - 50,
-				screenDisplayer.getHeight() / 2);
+		g.drawString(instructionsMessage,
+				(screenDisplayer.getWidth() - fontMetrics
+						.stringWidth(instructionsMessage)) / 2,
+				2*screenDisplayer.getHeight() / (gameModeMessages.size() + 3));
+		for (int i = 0; i < gameModeMessages.size(); i++) {
+			g.drawString(
+					gameModeMessages.get(i),
+					(screenDisplayer.getWidth() - maxWidth) / 2,
+					(i + 3) * screenDisplayer.getHeight()
+							/ (gameModeMessages.size() + 3));
+		}
+		g.setColor(lastColor);
 	}
 
 }

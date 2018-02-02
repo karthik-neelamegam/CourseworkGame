@@ -10,7 +10,8 @@ public class SurfacePicker {
 	
 	private EnumMap<Surface, Double> surfaceRatios;
 	private double totalRatio;
-
+	
+	//potential to add more surfaces if an enummap instead of storing ratio for each surface in a separate variable
 	public SurfacePicker(EnumMap<Surface, Double> surfaceRatios) {
 		this.surfaceRatios = surfaceRatios;
 		totalRatio = 0;
@@ -19,15 +20,7 @@ public class SurfacePicker {
 			totalRatio += ratio;
 		}
 	}
-	
-	public static SurfacePicker getDefaultSurfacePicker() {
-		EnumMap<Surface, Double> surfaceRatios = new EnumMap<Surface, Double>(Surface.class);
-		surfaceRatios.put(Surface.SLOW,1d);
-		surfaceRatios.put(Surface.NORMAL,20d);
-		surfaceRatios.put(Surface.FAST,1d);
-		return new SurfacePicker(surfaceRatios);
-	}
-
+			
 	public Surface getRandomSurface() {
 		double rand = Application.rng.nextDouble() * totalRatio;
 		double cumulativeRatios = 0;
@@ -36,8 +29,7 @@ public class SurfacePicker {
 		Entry<Surface, Double> entry = null;
 		do {
 			entry = surfaceRatiosIterator.next();
-			double ratio = entry.getValue();
-			cumulativeRatios += ratio;
+			cumulativeRatios += entry.getValue();
 		} while(cumulativeRatios < rand);
 		return entry.getKey();
 	}

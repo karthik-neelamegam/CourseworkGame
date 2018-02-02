@@ -9,90 +9,54 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import dsa.DisjointSet;
 import logic.Direction;
 import logic.Entity;
 import user_interface.Application;
+import dsa.DisjointSet;
 
-public class Maze extends Entity {
+public class GameMap extends Entity {
 
 	private Cell[][] cells;
-	//private List<Wall> wallsBetweenCells;
-	//private List<Wall> borderWalls;
-	private Cell startCell, endCell;
-	public Maze(int numCellsWide, int numCellsHigh, int x, int y, int maxWidth,
-			int maxHeight, DeadEndProbability deadEndProbability, double wallProportionOfCellDimensions, int numCheckpoints,
-			int numCheckpointAttempts, SurfacePicker surfacePicker, Color checkpointColor, int startCellColumn, int startCellRow, int endCellColumn, int endCellRow, Color wallColor, MazeType mazeType) {
-		super(x, y, numCellsWide
-				* Math.min(maxHeight / numCellsHigh, maxWidth / numCellsWide),
-				numCellsHigh
-						* Math.min(maxHeight / numCellsHigh, maxWidth
-								/ numCellsWide));
-		initCells(numCellsWide, numCellsHigh, maxWidth, maxHeight, wallColor, wallProportionOfCellDimensions, surfacePicker);
+	private Color groundColor;
+	private int numCheckpoints;
+	public GameMap(int numCellsWide, int numCellsHigh, double x, double y, double cellSideLength, double deadEndProbability, double wallProportionOfCellDimensions, double checkpointProportionOfCellDimensions, int numCheckpointsExcludingEndpoints, SurfacePicker surfacePicker, Color checkpointColor, Color wallColor, Color groundColor, GameMapType mapType) {
+		super(x, y, numCellsWide*cellSideLength, numCellsHigh*cellSideLength);
+		this.groundColor = groundColor;
+		this.numCheckpoints = numCheckpointsExcludingEndpoints+2;
+		initCells(numCellsWide, numCellsHigh, cellSideLength, wallColor, wallProportionOfCellDimensions, checkpointProportionOfCellDimensions, surfacePicker);
 		System.out.println("Cells initialised");
-		startCell = cells[startCellColumn][startCellRow];
-		endCell = cells[endCellColumn][endCellRow];
-		switch(mazeType) {
+		switch(mapType) {
 		case KRUSKAL:
 			initKruskalPerfectMaze();
 			break;
 		case DFS:
 			initDepthFirstPerfectMaze();
+			break;
 		}
-		System.out.println("Generated perfect maze");
 		removeDeadEnds(deadEndProbability);
-		System.out.println("Removed dead ends");
-		placeCheckpoints(numCheckpoints,
-				numCheckpointAttempts, checkpointColor);
-		System.out.println("Checkpoints placed");
-		//temp
-		int numVertices = 0, nCheckpoints = 0;
-		for(int i = 0; i < cells.length; i++) {
-			for(int j = 0; j < cells[i].length; j++) {
-				Cell cell = cells[i][j];
-				if(cell.getOrder() != 2 || cell.hasCheckpoint()) {
-					numVertices++;
-					if(cell.hasCheckpoint()) {
-						nCheckpoints++;
-					}
-				}
-			}
-		}
-		System.out.println("RequiredNumberOfVertices: " + numVertices);
-		System.out.println("RequiredNumberOfCheckpoints: " + nCheckpoints);
+		placeCheckpoints(numCheckpointsExcludingEndpoints,
+				checkpointColor);
 	}
 
 	public Cell getStartCell() {
-		return startCell;
+		return cells[0][0];
 	}
 	
 	public Cell getEndCell() {
-		return endCell;
+		return cells[cells.length-1][cells[0].length-1];
 	}
 	
-	private void initCells(int numCellsWide, int numCellsHigh, int maxWidth, int maxHeight, Color wallColor, double wallProportionOfCellDimensions, SurfacePicker surfacePicker) {
+	public int getNumCheckpoints() {
+		return numCheckpoints;
+	}
+	
+	private void initCells(int numCellsWide, int numCellsHigh, double cellSideLength, Color wallColor, double wallProportionOfCellDimensions, double checkpointProportionOfCellDimensions, SurfacePicker surfacePicker) {
 		cells = new Cell[numCellsWide][numCellsHigh];
-		//wallsBetweenCells = new ArrayList<Wall>();
-		int cellSide = Math.min(maxHeight / numCellsHigh, maxWidth / numCellsWide);
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
-				Cell currentCell = new Cell(x + i * cellSide, y + j * cellSide, cellSide, surfacePicker.getRandomSurface(), wallProportionOfCellDimensions, wallColor);
+				Cell currentCell = new Cell(x + i * cellSideLength, y + j * cellSideLength, cellSideLength, surfacePicker.getRandomSurface(), wallProportionOfCellDimensions, wallColor, checkpointProportionOfCellDimensions);
 				cells[i][j] = currentCell;
-/*				if (i == 0) {
-					borderWalls.add(Wall.createWall(currentCell, null, Direction.WEST,
-							wallProportionOfCellDimensions));
-				} else if (i == cells.length - 1) {
-					borderWalls.add(Wall.createWall(currentCell, null, Direction.EAST,
-							wallProportionOfCellDimensions));
-				}
-				if (j == 0) {
-					borderWalls.add(Wall.createWall(currentCell, null, Direction.NORTH,
-							wallProportionOfCellDimensions));
-				} else if (j == cells[i].length - 1) {
-					borderWalls.add(Wall.createWall(currentCell, null, Direction.SOUTH,
-							wallProportionOfCellDimensions));
-				}
-*/				if (j > 0) {
+				if (j > 0) {
 					Cell neighbouringCell = cells[i][j - 1];
 					currentCell.addNeighbouringCell(neighbouringCell, Direction.NORTH);
 				}
@@ -108,7 +72,7 @@ public class Maze extends Entity {
 	private void initDepthFirstPerfectMaze() {
 		Stack<Cell> stack = new Stack<Cell>();
 		Set<Cell> visitedCells = new HashSet<Cell>();
-		Cell currentCell = startCell;
+		Cell currentCell = cells[0][0];
 		visitedCells.add(currentCell);
 		do {
 			List<Cell> unvisitedNeighbouringCells = new ArrayList<Cell>();
@@ -157,7 +121,7 @@ public class Maze extends Entity {
 		}
 	}
 	
-	private void removeDeadEnds(DeadEndProbability deadEndProbability) {
+	private void removeDeadEnds(double deadEndProbability) {
 		List<Cell> cellsList = new ArrayList<Cell>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -168,7 +132,7 @@ public class Maze extends Entity {
 		for (Cell cell : cellsList) {
 			if (cell.getOrder() <= 1) {
 				System.out.println("REMOVING");
-				if (Application.rng.nextFloat() < deadEndProbability.getProbability()) {
+				if (Application.rng.nextFloat() < deadEndProbability) {
 					Cell walledCell = cell.getRandomNeighbouringWalledCell();
 					cell.setAdjacentTo(walledCell);
 				}
@@ -176,11 +140,10 @@ public class Maze extends Entity {
 		}
 	}
 
-	// REMEMBER TO MAKE START AND END CHECKPOINTS AS WELL!!!
-	private void placeCheckpoints(int numCheckpoints, int numAttempts, Color checkpointColor) {
-		startCell.addCheckpoint(checkpointColor);
-		endCell.addCheckpoint(checkpointColor);
-		for (int i = 0; i < numCheckpoints; i++) {
+	private void placeCheckpoints(int numCheckpointsExcludingEndpoints, Color checkpointColor) {
+		getStartCell().addCheckpoint(checkpointColor);
+		getEndCell().addCheckpoint(checkpointColor);
+		for (int i = 0; i < numCheckpointsExcludingEndpoints; i++) {
 			int x = Application.rng.nextInt(cells.length);
 			int y = Application.rng.nextInt(cells[x].length);
 			Cell checkpointCell = cells[x][y];
@@ -193,7 +156,7 @@ public class Maze extends Entity {
 	}
 
 	public double getCellSide() {
-		return startCell.getHeight();
+		return cells[0][0].getHeight();
 	}
 
 	@Override
@@ -203,7 +166,7 @@ public class Maze extends Entity {
 
 	@Override
 	public void render(Graphics g) {
-		g.setColor(Color.WHITE);
+		g.setColor(groundColor);
 		g.fillRect((int) x, (int) y, (int) width, (int) height);
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -217,13 +180,6 @@ public class Maze extends Entity {
 				currentCell.renderWalls(g);
 			}
 		}
-
-/*		for (Wall wall : wallsBetweenCells) {
-			wall.render(g);
-		}
-*//*		for (Wall wall : borderWalls) {
-			wall.render(g);
-		}
-*/	}
+	}
 
 }

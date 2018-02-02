@@ -13,8 +13,7 @@ public class Application {
 		rng = new Random(randomSeed);
 		JFrame frame = new JFrame("CourseworkGame");
 		ScreenDisplayer screenDisplayer = new ScreenDisplayer(targetFps);
-		GameSettings defaults = GameSettings.getDefaultSettings();
-		Screen menu = new MainMenuScreen(screenDisplayer, defaults);
+		Screen menu = new MainMenuScreen(screenDisplayer);
 		screenDisplayer.setScreen(menu);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		double screenHeight = screenSize.getHeight();
@@ -31,7 +30,7 @@ public class Application {
 	}
 	
 	public static void main(String[] args) {
-		new Application(0.75, 1.33, 60, 1);
+		new Application(0.75, 1, 60, 1);
 	}
 
 }

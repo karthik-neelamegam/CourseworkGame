@@ -1,5 +1,5 @@
 package map;
 
-public enum MazeType {
+public enum GameMapType {
 	DFS, KRUSKAL
 }

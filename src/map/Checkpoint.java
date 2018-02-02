@@ -13,12 +13,14 @@ import logic.Player;
 //don't need to extend entity, a cell IS a checkpoint
 public class Checkpoint extends Entity {
 	private Set<Player> playersEncountered; //polymorphism 
-			//set allows for variable number of players, rather than storing variables for each player
+			//set allows for variable number of players (1 or 2, but could be extended to 3+ in future), rather than storing variables for each player
 	private Color color;
-	public Checkpoint(double x, double y, double width, double height, Color color) {
+	private double checkpointProportionOfCellDimensions;
+	public Checkpoint(double x, double y, double width, double height, Color color, double checkpointProportionOfCellDimensions) {
 		super(x, y, width, height);
 		playersEncountered = new HashSet<Player>();
 		this.color = color;
+		this.checkpointProportionOfCellDimensions = checkpointProportionOfCellDimensions;
 	}
 	
 	public boolean addEncounteredPlayer(Player player) {
@@ -32,26 +34,20 @@ public class Checkpoint extends Entity {
 
 	@Override
 	public void render(Graphics g) {
-		g.setColor(Color.YELLOW);
-		//Graphics2D g2d = (Graphics2D) g;
-		//g2d.setColor(Color.YELLOW);
-		//Arc2D.Double arc = new Arc2D.Double(x, y, width, height, 0.0, 270, Arc2D.OPEN);
+		Color lastColor = g.getColor();
 		g.setColor(color);
-		g.fillOval((int)(x+width/12), (int)(y+height/12), (int)(10*width/12), (int)(10*height/12));
+		g.fillOval((int) (x+width*(1-checkpointProportionOfCellDimensions)/2), (int) (y+height*(1-checkpointProportionOfCellDimensions)/2), (int) (width*checkpointProportionOfCellDimensions), (int) (height*checkpointProportionOfCellDimensions));
 		int numPlayersEncountered = playersEncountered.size();
 		double startAngle = 0;
-		double arcAngle = 360/(numPlayersEncountered+2);
+		double arcAngle = 360/(numPlayersEncountered+1);
 		for(Player player : playersEncountered) {
 			g.setColor(player.getColor());
-			g.fillArc((int)(x+width/12), (int)(y+height/12), (int)(10*width/12), (int)(10*height/12), (int)startAngle, (int)arcAngle);
+			g.fillArc((int) (x+width*(1-checkpointProportionOfCellDimensions)/2), (int) (y+height*(1-checkpointProportionOfCellDimensions)/2), (int) (width*checkpointProportionOfCellDimensions), (int) (height*checkpointProportionOfCellDimensions), (int)startAngle, (int)arcAngle);
 			startAngle += arcAngle;
 		}
-		g.setColor(Color.ORANGE);
-		g.fillArc((int)(x+width/12), (int)(y+height/12), (int)(10*width/12), (int)(10*height/12), (int)startAngle, (int)arcAngle);
-		startAngle += arcAngle;
-
 		g.setColor(Color.BLACK);
-		g.drawOval((int)(x+width/12), (int)(y+height/12), (int)(10*width/12), (int)(10*height/12));
+		g.drawOval((int) (x+width*(1-checkpointProportionOfCellDimensions)/2), (int) (y+height*(1-checkpointProportionOfCellDimensions)/2), (int) (width*checkpointProportionOfCellDimensions), (int) (height*checkpointProportionOfCellDimensions));
+		g.setColor(lastColor);
 	}
 	
 }

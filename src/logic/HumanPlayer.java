@@ -7,26 +7,26 @@ import java.awt.event.KeyListener;
 import map.Cell;
 
 public class HumanPlayer extends Player implements KeyListener {
-
-	public HumanPlayer(Cell startCell, double baseVel, Color color, int numCheckpointsToReach) {
-		super(startCell, baseVel, color, numCheckpointsToReach);
+	private final int upKey, downKey, leftKey, rightKey;
+	public HumanPlayer(Cell startCell, Cell endCell, double baseVel, Color color, String name, double playerProportionOfCellDimensions, int numCheckpointsToReach, int upKey, int downKey, int leftKey, int rightKey) {
+		super(startCell, endCell, baseVel, color, name, playerProportionOfCellDimensions, numCheckpointsToReach);
+		this.upKey = upKey;
+		this.downKey = downKey;
+		this.leftKey = leftKey;
+		this.rightKey = rightKey;
 	}
-
+	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		switch (e.getKeyCode()) {
-		case KeyEvent.VK_UP:
+		int keyCode = e.getKeyCode();
+		if (keyCode == upKey) {
 			changeDirection(Direction.NORTH);
-			break;
-		case KeyEvent.VK_DOWN:
+		} else if (keyCode == downKey) {
 			changeDirection(Direction.SOUTH);
-			break;
-		case KeyEvent.VK_RIGHT:
+		} else if (keyCode == rightKey) {
 			changeDirection(Direction.EAST);
-			break;
-		case KeyEvent.VK_LEFT:
+		} else if (keyCode == leftKey) {
 			changeDirection(Direction.WEST);
-			break;
 		}
 	}
 

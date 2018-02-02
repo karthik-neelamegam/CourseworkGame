@@ -1,48 +1,100 @@
 package user_interface;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import java.util.Set;
 
-import logic.AIPlayer;
 import logic.HumanPlayer;
-import logic.ReducedGraph;
-import map.DeadEndProbability;
-import map.Maze;
-import map.MazeType;
+import logic.Player;
+import map.GameConstants;
+import map.GameMap;
+import map.GameMapType;
+import map.Level;
 import map.SurfacePicker;
 
-public class GameScreen implements Screen {
+public abstract class GameScreen implements Screen {
 
-	private ScreenDisplayer screenDisplayer;
-	private GameSettings gameSettings;
+	protected ScreenDisplayer screenDisplayer;
+	protected Level currentLevel;
+	private GameMap map;
+	protected Set<Player> players;
+	protected Player winner;
+	private boolean roundOver;
 	private boolean paused;
-	private Maze maze;
-	private HumanPlayer player;
-	private AIPlayer ai;
-	public GameScreen(ScreenDisplayer screenDisplayer, GameSettings gameSettings) {
+	
+	
+	public GameScreen(ScreenDisplayer screenDisplayer) {
 		this.screenDisplayer = screenDisplayer;
-		this.gameSettings = gameSettings;
 		paused = false;
-		maze = new Maze(10, 10, 0, 0, screenDisplayer.getWidth(),
-				screenDisplayer.getHeight(), DeadEndProbability.MEDIUM, 0.1, 10, 10,
-				SurfacePicker.getDefaultSurfacePicker(), Color.YELLOW, 0, 0,
-				9, 9, Color.BLACK, MazeType.KRUSKAL);
-		player = new HumanPlayer(maze.getStartCell(), maze.getCellSide() / 10,
-				Color.GREEN, 10);
-		ai = new AIPlayer(maze.getEndCell(), maze.getStartCell(), maze.getCellSide() / 10, Color.RED, 10, new ReducedGraph(maze.getStartCell()), 10, 2);
+		roundOver = false;
+		winner = null;
 	}
 
+	protected void setUpLevel(Level level) {
+		currentLevel = level;
+		winner = null;
+		players = null;//new HashSet<Player>(); // must be removed before roundOver set to false so that update method doesn't think round is over again.
+		roundOver = false;
+		int numCellsWide = level.getNumCellsWide();
+		int numCellsHigh = level.getNumCellsHigh();
+		double cellSideLength = Math.min(screenDisplayer.getHeight()/numCellsHigh, screenDisplayer.getWidth()/ numCellsWide);
+		double width = numCellsWide * cellSideLength;
+		double height = numCellsHigh * cellSideLength;
+		double x = (screenDisplayer.getWidth()-width)/2;
+		double y = (screenDisplayer.getHeight()-height)/2;
+		double deadEndProbability = level.getDeadEndProbability();
+		double wallProportionOfCellDimensions = GameConstants.WALL_PROPORTION_OF_CELL_DIMENSIONS;
+		double checkpointProportionOfCellDimensions = GameConstants.CHECKPOINT_PROPORTION_OF_CELL_DIMENSIONS;
+		int numCheckpointsExcludingEndpoints = level.getNumCheckpointsExcludingEndpoints();
+		SurfacePicker surfacePicker = level.getSurfacePicker();
+		
+		Color checkpointColor = GameConstants.CHECKPOINT_COLOR;
+		Color wallColor = GameConstants.WALL_COLOR;
+		Color groundColor = GameConstants.GROUND_COLOR;
+		GameMapType mapType = level.getMapType();
+		map = new GameMap(numCellsWide, numCellsHigh, x, y, cellSideLength, deadEndProbability, wallProportionOfCellDimensions, checkpointProportionOfCellDimensions,
+				numCheckpointsExcludingEndpoints, surfacePicker, checkpointColor, wallColor,
+				groundColor, mapType);
+		players = createPlayersOnLevelSetUp(map);
+	}
+	
+	protected abstract Set<Player> createPlayersOnLevelSetUp(GameMap map);
+	
+	protected abstract void renderRoundOverOverlay(Graphics g);
+	
+	protected abstract void doWhenRoundOverAndKeyPressed(KeyEvent e);
+	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		player.keyPressed(e);
+		int keyCode = e.getKeyCode();
+		if(!paused && !roundOver) {
+			if(keyCode == KeyEvent.VK_ESCAPE) {
+				paused = true;
+			}
+			for(Player player : players) {
+				if(player instanceof HumanPlayer) {
+					((HumanPlayer)player).keyPressed(e);
+				}
+			}
+		} else {
+			if(paused){
+				if(keyCode == KeyEvent.VK_ESCAPE) {
+					paused = false;
+				} else if(keyCode == KeyEvent.VK_Q) {
+					screenDisplayer.setScreen(new MainMenuScreen(screenDisplayer));
+				}
+			}
+			if(roundOver) {
+				doWhenRoundOverAndKeyPressed(e);
+			}
+		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		player.keyReleased(e);
+	
 	}
 
 	@Override
@@ -51,47 +103,71 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void enter() {
-
+		
 	}
 
 	@Override
 	public void leave() {
-		// TODO Auto-generated method stub
-
+		map = null;
+		players = null;
 	}
 
 	@Override
 	public void update(double delta) {
-		if (!paused) {
-			player.update(delta);
-			ai.update(delta);
+		if (!paused && !roundOver) {
+			map.update(delta);
+			if(players != null) {
+				for (Player player : players) {
+					player.update(delta);
+					if(player.finished()) {
+						System.out.println("FINISHED");
+						roundOver = true;
+						winner = player;
+						break;
+					}
+				}
+			}
 		}
 	}
 
 	@Override
 	public void render(Graphics g) {
+		Color lastColor = g.getColor();
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, screenDisplayer.getWidth(),
 				screenDisplayer.getHeight());
-		g.setColor(Color.WHITE);
-		maze.render(g);
-		player.render(g);
-		ai.render(g);
+		map.render(g);
+		for(Player player : players) {
+			player.render(g);
+		}
 		if (paused) {
 			renderPauseOverlay(g);
 		}
+		if (roundOver) {
+			renderRoundOverOverlay(g);
+		}
+		g.setColor(lastColor);
 	}
 
-	public void renderPauseOverlay(Graphics g) {
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-				0.2f));
-		g2d.setColor(Color.BLACK);
-		g2d.fillRect(0, 0, screenDisplayer.getWidth(),
-				screenDisplayer.getHeight());
-		g2d.setColor(Color.WHITE);
-		g2d.drawString(
-				"Press ESCAPE to resume or Q to quit and exit to main menu",
-				50, 50);
+	private void renderPauseOverlay(Graphics g) {
+		String informationMessage = "PAUSED";
+		String instructionsMessage = "Press: [ESC] to resume; [Q] to exit to main menu";
+		renderOverlay(g, informationMessage, instructionsMessage);
 	}
+	
+	//one line each, keep messages short
+	protected void renderOverlay(Graphics g, String informationMessage, String instructionsMessage) {
+		Color lastColor = g.getColor();
+		Color overlayColor = new Color(0, 0, 0, 0.7f);
+		g.setColor(overlayColor);
+		g.fillRect(0, 0, screenDisplayer.getWidth(), screenDisplayer.getHeight());
+		FontMetrics fontMetrics = g.getFontMetrics();
+		int informationWidth = fontMetrics.stringWidth(informationMessage);
+		int instructionsWidth = fontMetrics.stringWidth(instructionsMessage);
+		g.setColor(Color.WHITE);
+		g.drawString(informationMessage, (screenDisplayer.getWidth()-informationWidth)/2, screenDisplayer.getHeight()/3);
+		g.drawString(instructionsMessage, (screenDisplayer.getWidth()-instructionsWidth)/2, 2*screenDisplayer.getHeight()/3);
+		g.setColor(lastColor);
+	}
+	
 }

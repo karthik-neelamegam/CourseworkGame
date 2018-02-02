@@ -80,17 +80,23 @@ public class ReducedGraph {
 
 		public void appendCell(Cell cell) {
 			edgeCells.add(cell);
-			if (edgeCells.size() > 0) {
-				totalWeight += edgeCells.get(edgeCells.size() - 1).getWeightedDistanceToAdjacentCell(cell);
+			if (edgeCells.size() > 1) {				
+				totalWeight += edgeCells.get(edgeCells.size() - 2).getWeightedDistanceToAdjacentCell(cell);
 			}
 		}
 
-		public List<Cell> getCells() {
-			return Collections.unmodifiableList(edgeCells);
+		public List<Cell> getCells(Cell startCell) {
+			List<Cell> cells = null;
+			if(edgeCells.get(edgeCells.size()-1) == startCell) {
+				Collections.reverse(edgeCells);
+			} else if(edgeCells.get(0) != startCell){
+				return null;
+			}
+			cells = Collections.unmodifiableList(edgeCells);
+			return cells;
 		}
 	}
 
-	
 	private Map<Cell, Vertex> cellsToVerticesMap;
 	private Set<Vertex> vertices; //constant lookup, map.containsValue is O(n)
 	private Set<Vertex> checkpointVertices;
@@ -100,7 +106,7 @@ public class ReducedGraph {
 		vertices = new HashSet<Vertex>();
 		checkpointVertices = new HashSet<Vertex>();
 		System.out.println("Starting to reduce graph");
-		reduceGraph(new HashSet<Cell>(), new Vertex(cell));
+		reduceGraph(new HashSet<Cell>(), findVertex(new HashSet<Cell>(), cell));
 		System.out.println("ReducedGraph generated");
 		System.out.println("ReducedGraph numVertices: " + vertices.size());
 		System.out.println("ReducedGraph numCheckpointVertices: " + checkpointVertices.size());
@@ -122,13 +128,36 @@ public class ReducedGraph {
 	// graph must be connected
 	// using cell/vertex map rather than vertex set for faster look up time when
 	// getting the initialised vertex of a cell
+	private Vertex findVertex(Set<Cell> discoveredCells, Cell cell) {
+		if(cell.hasCheckpoint() || cell.getOrder() != 2) {
+			return new Vertex(cell);
+		} else {
+			discoveredCells.add(cell);
+			for(Cell adjacentCell : cell.getAdjacentCells()) {
+				if(!discoveredCells.contains(adjacentCell)) {
+					Vertex vertex = findVertex(discoveredCells, adjacentCell);
+					if(vertex != null) {
+						return vertex;
+					}
+				}
+			}
+		} 
+		return null;
+	}
 	private void reduceGraph(Set<Cell> discoveredCells, Vertex currentVertex) {
+		cellsToVerticesMap.put(currentVertex.getCell(), currentVertex);
+		vertices.add(currentVertex);
+		if(currentVertex.getCell().hasCheckpoint()) {
+			checkpointVertices.add(currentVertex);
+		}
+		discoveredCells.add(currentVertex.getCell());
+		
 		//iterates through each adjacent cell and recurses (DFS)
 		for (Cell adjacentCell : currentVertex.getCell().getAdjacentCells()) {
 			
 			//if a cell has been discovered, then it has already been dealt with in the DFS, so ignore it
-			if (!discoveredCells.contains(adjacentCell)) {
-				
+			//comment on why the part after || is needed
+			if (!discoveredCells.contains(adjacentCell) || (cellsToVerticesMap.containsKey(adjacentCell) && !currentVertex.isAdjacentTo(cellsToVerticesMap.get(adjacentCell)))) {				
 				//build the edge from this vertex to the next vertex (junction/checkpoint)
 				Edge edge = new Edge();
 				Cell previousCell = currentVertex.getCell();
@@ -155,12 +184,6 @@ public class ReducedGraph {
 						nextVertex = cellsToVerticesMap.get(nextCell);
 					} else {
 						nextVertex = new Vertex(nextCell);
-						cellsToVerticesMap.put(nextCell, nextVertex);
-						vertices.add(nextVertex);
-						if(nextVertex.getCell().hasCheckpoint()) {
-							checkpointVertices.add(nextVertex);
-						}
-						discoveredCells.add(nextCell);
 						recurse = true;
 					}
 					currentVertex.addAdjacentVertex(nextVertex, edge);

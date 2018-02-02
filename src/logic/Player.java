@@ -5,127 +5,117 @@ import java.awt.Graphics;
 
 import map.Cell;
 
-public class Player extends Sprite {
-	protected Color color;
-	protected double baseVel, currentVel;
+public class Player extends Entity {
+	private Color color;
+	private String name;
+	private final double baseVel;
 	protected Cell currentCell;
-	protected Cell targetCell;
-	protected Direction queuedDirection;
-	protected int numCheckpointsReached;
-	protected int numCheckpointsToReach;
+	private Cell endCell;
+	protected Direction currentDirection;
+	private Direction queuedDirection;
+	private double playerProportionOfCellDimensions;
+	private int numCheckpointsReached, numCheckpointsToReach;
 	//protected double tolerance; //should be twice the ratio between max velocity and cellside for consistency 
-	public Player(Cell startCell, double baseVel, Color color, int numCheckpointsToReach) {
-		super(startCell.x, startCell.y, startCell.width, startCell.height, baseVel);
+	public Player(Cell startCell, Cell endCell, double baseVel, Color color, String name, double playerProportionOfCellDimensions, int numCheckpointsToReach) {
+		super(startCell.x, startCell.y, startCell.width, startCell.height);
 		this.color = color;
+		this.name = name;
 		//this.tolerance = tolerance;
 		this.baseVel = baseVel;
-		currentCell = startCell;
+		this.playerProportionOfCellDimensions = playerProportionOfCellDimensions;
 		this.numCheckpointsToReach = numCheckpointsToReach;
 		numCheckpointsReached = 0;
+		this.endCell = endCell;
+		currentCell = startCell;
 		if(startCell.hasCheckpoint()) {
 			if(currentCell.getCheckpoint().addEncounteredPlayer(this)) {
 				numCheckpointsReached++;
 			}
 		}
-		direction = Direction.EAST;
+		currentDirection = Direction.EAST;
 	}
 	
 	public Color getColor() {
 		return color;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
-	protected void changeDirection(Direction direction) {
-		double adjustedVel = vel*currentCell.getSpeedMultiplier();
-		Cell adjacentCell = currentCell.getAdjacentCell(direction);
+	protected void changeDirection(Direction targetDirection) {
+		double adjustedVel = baseVel*currentCell.getSpeedMultiplier();
+		Cell adjacentCell = currentCell.getAdjacentCell(targetDirection);
 		if(adjacentCell == null) {
-			switch(direction) {
+			switch(targetDirection) {
 			case NORTH: case SOUTH:
 				if(y == currentCell.getY()) {
-					System.out.println("A");
-					queuedDirection = direction;
+					queuedDirection = targetDirection;
 				} else {
-					System.out.println("B");
-
-					this.direction = direction;
+					currentDirection = targetDirection;
 					queuedDirection = null;
 				} break;
 			case WEST: case EAST:
 				if(x == currentCell.getX()) {
-					System.out.println("C");
-
-					queuedDirection = direction;
+					queuedDirection = targetDirection;
 				} else {
-					System.out.println("D");
-
-					this.direction = direction;
+					currentDirection = targetDirection;
 					queuedDirection = null;
 				} break;
 			}
 		} else {
 			double tolerance = 0;
-			switch(direction) {
+			switch(targetDirection) {
 			case NORTH: case SOUTH:
 				tolerance = (adjustedVel/currentCell.getWidth())*2;
 				if(x >= currentCell.getX() - tolerance*currentCell.getWidth() && x <= currentCell.getX() + tolerance*currentCell.getWidth()) {
-					System.out.println("E");
 					x = currentCell.getX();
-					this.direction = direction;
+					currentDirection = targetDirection;
 					queuedDirection = null;
 				} else {
-					System.out.println("F");
-					queuedDirection = direction;
+					queuedDirection = targetDirection;
 				} break;
 			case WEST: case EAST:
 				tolerance = (adjustedVel/currentCell.getHeight())*2;
 				if(y >= currentCell.getY() - tolerance*currentCell.getHeight() && y <= currentCell.getY() + tolerance*currentCell.getHeight()) {
-					System.out.println("G");
 					y = currentCell.getY();
-					this.direction = direction;
+					currentDirection = targetDirection;
 					queuedDirection = null;
 				} else {
-					System.out.println("H");
-					queuedDirection = direction;
+					queuedDirection = targetDirection;
 				} break;
 			}
 		}
 	}
-	
-	protected void move2(Cell toCell, double delta) {
 		
-	}
-	
-	protected void move(double delta) {
-		Cell adjacentCell = currentCell.getAdjacentCell(direction);
-		if(adjacentCell != null) {
-			//System.out.println("NOT NULL");
-			//System.out.println(adjacentCell.x + " " + adjacentCell.y);
-		} 
-		double adjustedVel = vel*currentCell.getSpeedMultiplier();
+	private void move(double delta) {
+		Cell adjacentCell = currentCell.getAdjacentCell(currentDirection);
+		double adjustedVel = baseVel*currentCell.getSpeedMultiplier();
 		//assumes you +/- vel*delta doesn't make you skip an entire cell (which should be true)
-		switch (direction) {
+		switch (currentDirection) {
 		case NORTH:
-			if (adjacentCell == null && y - vel * delta < currentCell.getY()) {
+			if (adjacentCell == null && y - baseVel * delta < currentCell.getY()) {
 				y = currentCell.getY();
 			} else {
 				y -= adjustedVel * delta;
 			}
 			break;
 		case SOUTH:
-			if (adjacentCell == null && y + vel * delta > currentCell.getY()) {
+			if (adjacentCell == null && y + baseVel * delta > currentCell.getY()) {
 				y = currentCell.getY();
 			} else {
 				y += adjustedVel * delta;
 			}
 			break;
 		case EAST:
-			if (adjacentCell == null && x + vel * delta > currentCell.getX()) {
+			if (adjacentCell == null && x + baseVel * delta > currentCell.getX()) {
 				x = currentCell.getX();
 			} else {
 				x += adjustedVel * delta;
 			}
 			break;
 		case WEST:
-			if (adjacentCell == null && x - vel * delta < currentCell.getX()) {
+			if (adjacentCell == null && x - baseVel * delta < currentCell.getX()) {
 				x = currentCell.getX();
 			} else {
 				x -= adjustedVel * delta;
@@ -143,26 +133,26 @@ public class Player extends Sprite {
 			}
 		}
 	}
+	
+	public boolean finished() {
+		return numCheckpointsReached == numCheckpointsToReach && currentCell == endCell;
+	}
 
 	@Override
 	public void update(double delta) {
 		if(queuedDirection != null) {
 			changeDirection(Direction.valueOf(queuedDirection.toString()));
 		}
-		//System.out.println();
-		//System.out.println(currentCell.getX()+ ", " + currentCell.getY());
-		//System.out.println("Direction: " + direction.toString());
-		//System.out.println("QueuedDirection: " + ((queuedDirection != null) ? queuedDirection.toString() : "NULL"));
-		vel = baseVel;
 		move(delta);
 	}
 
 	@Override
 	public void render(Graphics g) {
+		Color lastColor = g.getColor();
 		g.setColor(color);
-		g.fillOval((int) (x+width/16), (int) (y+height/16), (int) (14*width/16), (int) (14*height/16));
+		g.fillOval((int) (x+width*(1-playerProportionOfCellDimensions)/2), (int) (y+height*(1-playerProportionOfCellDimensions)/2), (int) (width*playerProportionOfCellDimensions), (int) (height*playerProportionOfCellDimensions));
 		g.setColor(Color.BLACK);
-		g.drawString(""+numCheckpointsReached, (int) (x+width/2), (int) (y+height/2));
-		g.drawOval((int) (x+width/16), (int) (y+height/16), (int) (14*width/16), (int) (14*height/16));
+		g.drawOval((int) (x+width*(1-playerProportionOfCellDimensions)/2), (int) (y+height*(1-playerProportionOfCellDimensions)/2), (int) (width*playerProportionOfCellDimensions), (int) (height*playerProportionOfCellDimensions));
+		g.setColor(lastColor);
 	}
 }

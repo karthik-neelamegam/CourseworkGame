@@ -43,23 +43,24 @@ public class Cell extends Entity {
 	private Map<Direction, Cell> directionsToAdjacentCellsMap;
 	private Map<Cell, Wall> cellsToWallsMap;
 	//NEED TO ARGUE FOR WHY I CHOSE THESE DATA STRUCTURES, TALK ABOUT MEMORY AND ACCESS TIME COMPLEXITY AND WHEN, WHERE AND HOW OFTEN CERTAIN ACCESSES ARE MADE etc.
-	
-	
+	private int I, J;
 	private Checkpoint checkpoint;
 	private Surface surface;
 	private double wallProportionOfCellDimensions;
+	private double checkpointProportionOfCellDimensions;
 	private Color wallColor;
 
-	public Cell(double x, double y, double side, Surface surface, double wallProportionOfCellDimensions, Color wallColor) {
+	public Cell(double x, double y, double side, Surface surface, double wallProportionOfCellDimensions, Color wallColor, double checkpointProportionOfCellDimensions) {
 		super(x, y, side, side);
 		adjacentCellsToDirectionsMap = new HashMap<Cell, Direction>();
 		directionsToAdjacentCellsMap = new EnumMap<Direction, Cell>(Direction.class);
 		cellsToWallsMap = new HashMap<Cell, Wall>();
 		this.surface = surface;
 		this.wallProportionOfCellDimensions = wallProportionOfCellDimensions;
+		this.checkpointProportionOfCellDimensions = checkpointProportionOfCellDimensions;
 		this.wallColor = wallColor;
 	}
-	
+		
 	public Direction getDirectionTo(Cell cell) {
 		return adjacentCellsToDirectionsMap.get(cell);
 	}
@@ -72,7 +73,7 @@ public class Cell extends Entity {
 
 	public void addCheckpoint(Color checkpointColor) {
 		if (checkpoint == null) {
-			checkpoint = new Checkpoint(x, y, width, height, checkpointColor);
+			checkpoint = new Checkpoint(x, y, width, height, checkpointColor, checkpointProportionOfCellDimensions);
 		} else {
 			System.out.println("Cell already has checkpoint");
 		}
@@ -177,11 +178,19 @@ public class Cell extends Entity {
 	}
 	
 	public double getWeightedDistanceToAdjacentCell(Cell cell) {
-		double euclideanDistance = getEuclideanDistanceBetweenCentres(cell);
-		double halfEuclideanDistance = euclideanDistance / 2;
-		double weightedDistance = (halfEuclideanDistance)
-				/ getSpeedMultiplier() + (halfEuclideanDistance / 2)
-				/ cell.getSpeedMultiplier();
+		double distance;
+		Direction direction = adjacentCellsToDirectionsMap.get(cell);
+		//remove, do throw exception etc.
+		if(direction == null) {
+			System.out.println("FUCKKKKKKKK");
+			System.exit(0);
+		}
+		if(direction == Direction.NORTH || direction == Direction.SOUTH) {
+			distance = height;
+		} else {
+			distance = width;
+		}
+		double weightedDistance = (distance/2)/getSpeedMultiplier() + (distance/2)/cell.getSpeedMultiplier();
 		return weightedDistance;
 
 /*		double euclideanDistance = getEuclideanDistanceBetweenCentres(cell);
@@ -204,15 +213,18 @@ public class Cell extends Entity {
 
 	@Override
 	public void render(Graphics g) {
-		//TODO: render surfaces
+		Color lastColor = g.getColor();
 		g.setColor(surface.getColor());
 		g.fillRect((int) x, (int) y, (int) width, (int) height);
 		if (checkpoint != null) {
 			checkpoint.render(g);
 		}
+		g.setColor(lastColor);
 	}
 	
 	public void renderWalls(Graphics g) {
+		Color lastColor = g.getColor();
+		g.setColor(wallColor);
 		for(Entry<Cell, Wall> entry : cellsToWallsMap.entrySet()) {
 			Wall wall;
 			if((wall = entry.getValue()) != null) {
@@ -223,15 +235,15 @@ public class Cell extends Entity {
 				renderWall(g, direction);
 			}
 		}
+		g.setColor(lastColor);
 	}
 	
 	private void renderWall(Graphics g, Direction dir) {
-		//double wallX = 0, wallY = 0, wallWidth = 0, wallHeight = 0;
 		double wallY = (dir != Direction.SOUTH) ? y : y+height;
 		double wallX = (dir != Direction.EAST) ? x : x+width;
 		Graphics2D g2d = (Graphics2D) g;
 		Stroke oldStroke = g2d.getStroke();
-		double strokeWeight = wallProportionOfCellDimensions*((dir == Direction.NORTH || dir == Direction.SOUTH) ? height : width); 
+		double strokeWeight = wallProportionOfCellDimensions*(height); 
 	    Stroke stroke = new BasicStroke((int)strokeWeight, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 	    g2d.setStroke(stroke);
 	    g.setColor(wallColor);
@@ -241,31 +253,6 @@ public class Cell extends Entity {
 			g.drawLine((int)wallX, (int)wallY, (int)(wallX), (int)(wallY+height));
 		}
 		g2d.setStroke(oldStroke);
-/*		if(dir == Direction.WEST || dir == Direction.EAST) {
-			if(dir == Direction.WEST) {
-				wallX = x;
-			} else {
-				wallX = x + width;
-			}
-			wallY = y;
-			wallWidth = width * wallProportionOfCellDimensions;
-			wallY -= height * wallProportionOfCellDimensions/2;
-			wallHeight = height + width * wallProportionOfCellDimensions;
-			wallX -= wallWidth / 2;
-		} else if(dir == Direction.NORTH || dir == Direction.SOUTH) {
-			if(dir == Direction.NORTH) {
-				wallY = y;
-			} else {
-				wallY = y + height;
-			}
-			wallX = x;
-			wallHeight = height * wallProportionOfCellDimensions;
-			wallX -= width * wallProportionOfCellDimensions/2;
-			wallWidth = width + height * wallProportionOfCellDimensions;
-			wallY -= wallHeight / 2;
-		}
-*/		//g.setColor(wallColor);
-		//g.fillRect((int)wallX, (int)wallY, (int)wallWidth, (int)wallHeight);
 	}
 
 }
