@@ -8,8 +8,8 @@ import map.Cell;
 
 public class HumanPlayer extends Player implements KeyListener {
 	private final int upKey, downKey, leftKey, rightKey;
-	public HumanPlayer(Cell startCell, Cell endCell, double baseVel, Color color, String name, double playerProportionOfCellDimensions, int numCheckpointsToReach, int upKey, int downKey, int leftKey, int rightKey) {
-		super(startCell, endCell, baseVel, color, name, playerProportionOfCellDimensions, numCheckpointsToReach);
+	public HumanPlayer(Cell startCell, Cell endCell, double baseVel, double toleranceConstant, Color color, String name, double playerProportionOfCellDimensions, int numCheckpointsToReach, int upKey, int downKey, int leftKey, int rightKey) {
+		super(startCell, endCell, baseVel, toleranceConstant, color, name, playerProportionOfCellDimensions, numCheckpointsToReach);
 		this.upKey = upKey;
 		this.downKey = downKey;
 		this.leftKey = leftKey;
@@ -20,13 +20,13 @@ public class HumanPlayer extends Player implements KeyListener {
 	public void keyPressed(KeyEvent e) {
 		int keyCode = e.getKeyCode();
 		if (keyCode == upKey) {
-			changeDirection(Direction.NORTH);
+			changeDirection(Direction.UP);
 		} else if (keyCode == downKey) {
-			changeDirection(Direction.SOUTH);
+			changeDirection(Direction.DOWN);
 		} else if (keyCode == rightKey) {
-			changeDirection(Direction.EAST);
+			changeDirection(Direction.RIGHT);
 		} else if (keyCode == leftKey) {
-			changeDirection(Direction.WEST);
+			changeDirection(Direction.LEFT);
 		}
 	}
 

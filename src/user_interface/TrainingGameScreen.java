@@ -21,12 +21,11 @@ public class TrainingGameScreen extends GameScreen {
 	@Override
 	protected Set<Player> createPlayersOnLevelSetUp(GameMap map) {
 		Set<Player> players = new HashSet<Player>();
-		double playerBaseVel = map.getCellSide()
+		double playerBaseVel = map.getCellSideLength()
 				* GameConstants.PLAYER_BASE_VELOCITY_PROPORTION_OF_CELL_DIMENSIONS;
-		double playerProportionOfCellDimensions = GameConstants.PLAYER_PROPORTION_OF_CELL_DIMENSIONS;
 		int numCheckpoints = map.getNumCheckpoints();
-		players.add(new HumanPlayer(map.getStartCell(), map.getEndCell(), playerBaseVel,
-				GameConstants.PLAYER1_COLOR, GameConstants.PLAYER1_DEFAULT_NAME, playerProportionOfCellDimensions, numCheckpoints,
+		players.add(new HumanPlayer(map.getStartCell(), map.getEndCell(), playerBaseVel, GameConstants.PLAYER_TOLERANCE_CONSTANT,
+				GameConstants.PLAYER1_COLOR, GameConstants.PLAYER1_DEFAULT_NAME, GameConstants.PLAYER_PROPORTION_OF_CELL_DIMENSIONS, numCheckpoints,
 				GameConstants.PLAYER1_UP, GameConstants.PLAYER1_DOWN,
 				GameConstants.PLAYER1_LEFT, GameConstants.PLAYER1_RIGHT));		
 		return players;

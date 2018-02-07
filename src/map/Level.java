@@ -3,49 +3,49 @@ package map;
 import java.util.EnumMap;
 
 public enum Level {
-	ONE(5, 5, 5, GameMapType.DFS, 0, new SurfacePicker(
+	ONE(5, 5, 5, GameMapType.DFS, 0, 
 			new EnumMap<Surface, Double>(Surface.class) {
 				{
 					put(Surface.SLOW, 5d);
 					put(Surface.NORMAL, 90d);
 					put(Surface.FAST, 5d);
 				}
-			})), TWO(7, 7, 7, GameMapType.DFS, 0.1, new SurfacePicker(
+			}), TWO(7, 7, 7, GameMapType.DFS, 0.1, 
 			new EnumMap<Surface, Double>(Surface.class) {
 				{
 					put(Surface.SLOW, 10d);
 					put(Surface.NORMAL, 80d);
 					put(Surface.FAST, 10d);
 				}
-			})), THREE(10, 10, 10, GameMapType.DFS, 0.2, new SurfacePicker(
+			}), THREE(10, 10, 10, GameMapType.DFS, 0.2, 
 			new EnumMap<Surface, Double>(Surface.class) {
 				{
 					put(Surface.SLOW, 15d);
 					put(Surface.NORMAL, 70d);
 					put(Surface.FAST, 15d);
 				}
-			})), FOUR(15, 15, 15, GameMapType.KRUSKAL, 0.3, new SurfacePicker(
+			}), FOUR(15, 15, 15, GameMapType.KRUSKAL, 0.3, 
 			new EnumMap<Surface, Double>(Surface.class) {
 				{
 					put(Surface.SLOW, 20d);
 					put(Surface.NORMAL, 60d);
 					put(Surface.FAST, 20d);
 				}
-			})), FIVE(20, 20, 20, GameMapType.KRUSKAL, 0.4, new SurfacePicker(
+			}), FIVE(20, 20, 20, GameMapType.KRUSKAL, 0.4, 
 			new EnumMap<Surface, Double>(Surface.class) {
 				{
 					put(Surface.SLOW, 25d);
 					put(Surface.NORMAL, 50d);
 					put(Surface.FAST, 25d);
 				}
-			})), SIX(30, 30, 30, GameMapType.KRUSKAL, 0.5, new SurfacePicker(
+			}), SIX(30, 30, 30, GameMapType.KRUSKAL, 0.5, 
 			new EnumMap<Surface, Double>(Surface.class) {
 				{
 					put(Surface.SLOW, 30d);
 					put(Surface.NORMAL, 40d);
 					put(Surface.FAST, 30d);
 				}
-			}));
+			});
 
 	// can easily add more, ease of maintainenance/extensibility
 
@@ -53,17 +53,17 @@ public enum Level {
 	private double deadEndProbability; // the more deadends, the harder because
 										// u will keep getting stuck;
 	private GameMapType mapType;
-	private SurfacePicker surfacePicker;
+	private EnumMap<Surface, Double> surfaceRatios;
 
 	private Level(int numCellsWide, int numCellsHigh, int numCheckpointsExcludingEndpoints,
 			GameMapType mapType, double deadEndProbability,
-			SurfacePicker surfacePicker) {
+			EnumMap<Surface, Double> surfaceRatios) {
 		this.numCellsWide = numCellsWide;
 		this.numCellsHigh = numCellsHigh;
 		this.numCheckpointsExcludingEndpoints = numCheckpointsExcludingEndpoints;
 		this.mapType = mapType;
 		this.deadEndProbability = deadEndProbability;
-		this.surfacePicker = surfacePicker;
+		this.surfaceRatios = surfaceRatios;
 	}
 
 	public int getNumCellsWide() {
@@ -86,8 +86,8 @@ public enum Level {
 		return deadEndProbability;
 	}
 
-	public SurfacePicker getSurfacePicker() {
-		return surfacePicker;
+	public EnumMap<Surface, Double> getSurfaceRatios() {
+		return surfaceRatios;
 	}
 
 	public Level getNextLevel() {

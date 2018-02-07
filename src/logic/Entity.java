@@ -13,17 +13,13 @@ public abstract class Entity {
 		this.height = height;
 	}
 
-	public abstract void update(double delta);
+	public abstract void update();
 
 	public abstract void render(Graphics g);
 	
-	public double getSquaredEuclideanDistanceBetweenCentres(Entity other) {
-		return Math.pow(getCentreX() - other.getCentreX(), 2)
-		+ Math.pow(getCentreY() - other.getCentreY(), 2);
-	}
-	
-	public double getEuclideanDistanceBetweenCentres(Entity other) {
-		return Math.sqrt(getSquaredEuclideanDistanceBetweenCentres(other));
+	public double getDistanceBetweenCentres(Entity other) {
+		return Math.sqrt(Math.pow(getCentreX() - other.getCentreX(), 2)
+				+ Math.pow(getCentreY() - other.getCentreY(), 2));
 	}
 	
 	public double getCentreX() {
@@ -50,20 +46,11 @@ public abstract class Entity {
 		this.y = y;
 	}
 	
-
 	public double getWidth() {
 		return width;
 	}
 
-	public void setWidth(double width) {
-		this.width = width;
-	}
-
 	public double getHeight() {
 		return height;
-	}
-
-	public void setHeight(int h) {
-		this.height = h;
 	}
 }

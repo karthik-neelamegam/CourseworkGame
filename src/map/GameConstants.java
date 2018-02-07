@@ -16,6 +16,7 @@ public class GameConstants {
 	public static final int PLAYER2_LEFT = KeyEvent.VK_LEFT;
 	public static final int PLAYER2_RIGHT = KeyEvent.VK_RIGHT;
 	public static final double PLAYER_BASE_VELOCITY_PROPORTION_OF_CELL_DIMENSIONS = 0.05;
+	public static final double PLAYER_TOLERANCE_CONSTANT = 0.02;
 	public static final double PLAYER_PROPORTION_OF_CELL_DIMENSIONS = 7d/8d;
 	public static final String PLAYER1_DEFAULT_NAME = "GREEN";
 	public static final String PLAYER2_DEFAULT_NAME = "RED";

@@ -12,22 +12,18 @@ import javax.swing.JPanel;
 public class ScreenDisplayer extends JPanel implements KeyListener {
 	private Screen currentScreen;
 	private boolean running;
-	private int targetFps;
+	private final double desiredTimePerCycle;
 
-	public ScreenDisplayer(int targetFps) {
+	public ScreenDisplayer(int desiredGameHz) {
 		super();
 		setFocusable(true);
 		addKeyListener(this);
 		running = false;
-		this.targetFps = targetFps;
+		desiredTimePerCycle = 1e9 / desiredGameHz;
 	}
 
 	public void setScreen(Screen screen) {
-		if(currentScreen != null) {
-			currentScreen.leave();
-		}
 		currentScreen = screen;
-		currentScreen.enter();
 	}
 
 	public void run() {
@@ -41,27 +37,21 @@ public class ScreenDisplayer extends JPanel implements KeyListener {
 	}
 
 	private void gameLoop() {
-		long previousLoopTime = System.nanoTime();
-		long optimalLoopTime = 1000000000 / targetFps;
+		double previousCycleTime = System.nanoTime();
 		while (running) {
-			long currentTime = System.nanoTime();
-			long updateLength = currentTime - previousLoopTime;
-			previousLoopTime = currentTime;
-			double delta = updateLength / ((double) optimalLoopTime);
-			if(currentScreen != null) {
-				currentScreen.update(delta);
+			double currentTime = System.nanoTime();
+			while(currentTime - previousCycleTime > desiredTimePerCycle) {
+				currentScreen.update();
+				previousCycleTime += desiredTimePerCycle;
 			}
 			repaint();
-			long timeDifference = System.nanoTime() - previousLoopTime;
-			long sleepTimeInMillis = (optimalLoopTime - timeDifference) / 1000000;
-			if(sleepTimeInMillis < 0) {
-				System.out.println(""+(optimalLoopTime - timeDifference));
-			}
-			try {
-				Thread.sleep(sleepTimeInMillis);
-				
-			} catch (InterruptedException e) {
-				System.out.println(e.getStackTrace());
+			while(currentTime - previousCycleTime < desiredTimePerCycle) {
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				currentTime = System.nanoTime();
 			}
 		}
 	}

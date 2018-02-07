@@ -17,4 +17,5 @@ public enum Surface {
 	public Color getColor() {
 		return color;
 	}
+
 }

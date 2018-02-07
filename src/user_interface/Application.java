@@ -9,10 +9,10 @@ import javax.swing.JFrame;
 public class Application {
 	public static Random rng;
 	//private JFrame frame;
-	public Application(double screenHeightFraction, double aspectRatio, int targetFps, long randomSeed) {
+	public Application(double screenHeightFraction, double aspectRatio, int gameHz, long randomSeed) {
 		rng = new Random(randomSeed);
 		JFrame frame = new JFrame("CourseworkGame");
-		ScreenDisplayer screenDisplayer = new ScreenDisplayer(targetFps);
+		ScreenDisplayer screenDisplayer = new ScreenDisplayer(gameHz);
 		Screen menu = new MainMenuScreen(screenDisplayer);
 		screenDisplayer.setScreen(menu);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

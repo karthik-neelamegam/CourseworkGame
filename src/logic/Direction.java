@@ -3,22 +3,22 @@ package logic;
 import user_interface.Application;
 
 public enum Direction {
-	NORTH, SOUTH, EAST, WEST;
+	UP, DOWN, RIGHT, LEFT;
 	private final static Direction[] directions = Direction.values();
 	public Direction getOpposite() {
 		Direction opposite = null;
 		switch (this) {
-		case NORTH:
-			opposite = SOUTH;
+		case UP:
+			opposite = DOWN;
 			break;
-		case SOUTH:
-			opposite = NORTH;
+		case DOWN:
+			opposite = UP;
 			break;
-		case EAST:
-			opposite = WEST;
+		case RIGHT:
+			opposite = LEFT;
 			break;
-		case WEST:
-			opposite = EAST;
+		case LEFT:
+			opposite = RIGHT;
 			break;
 		}
 		return opposite;

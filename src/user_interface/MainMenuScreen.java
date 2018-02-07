@@ -8,6 +8,8 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import map.Level;
+
 public class MainMenuScreen implements Screen {
 	private ScreenDisplayer screenDisplayer;
 	public MainMenuScreen(ScreenDisplayer screenDisplayer) {
@@ -18,7 +20,7 @@ public class MainMenuScreen implements Screen {
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
 		case KeyEvent.VK_1:
-			screenDisplayer.setScreen(new DifficultySelectScreen(screenDisplayer));
+			screenDisplayer.setScreen(new AgainstAIGameScreen(screenDisplayer, Level.ONE));
 			break;
 		case KeyEvent.VK_2:
 			screenDisplayer.setScreen(new LevelSelectScreen(screenDisplayer, GameMode.TWO_PLAYER));
@@ -37,16 +39,7 @@ public class MainMenuScreen implements Screen {
 	}
 
 	@Override
-	public void enter() {
-	}
-
-	@Override
-	public void leave() {
-		screenDisplayer = null;
-	}
-
-	@Override
-	public void update(double delta) {
+	public void update() {
 	}
 
 	@Override

@@ -6,33 +6,31 @@ import java.awt.Graphics;
 import map.Cell;
 
 public class Player extends Entity {
-	private Color color;
-	private String name;
+	private final Color color;
+	private final String name;
 	private final double baseVel;
+	private final double toleranceConstant;
 	protected Cell currentCell;
-	private Cell endCell;
+	private final Cell endCell;
 	protected Direction currentDirection;
 	private Direction queuedDirection;
-	private double playerProportionOfCellDimensions;
-	private int numCheckpointsReached, numCheckpointsToReach;
-	//protected double tolerance; //should be twice the ratio between max velocity and cellside for consistency 
-	public Player(Cell startCell, Cell endCell, double baseVel, Color color, String name, double playerProportionOfCellDimensions, int numCheckpointsToReach) {
+	private final double playerProportionOfCellDimensions;
+	private int numCheckpointsReached;
+	private final int numCheckpointsToReach;
+	
+	public Player(Cell startCell, Cell endCell, double baseVel, double toleranceConstant, Color color, String name, double playerProportionOfCellDimensions, int numCheckpointsToReach) {
 		super(startCell.x, startCell.y, startCell.width, startCell.height);
 		this.color = color;
 		this.name = name;
-		//this.tolerance = tolerance;
 		this.baseVel = baseVel;
+		this.toleranceConstant = toleranceConstant;
 		this.playerProportionOfCellDimensions = playerProportionOfCellDimensions;
 		this.numCheckpointsToReach = numCheckpointsToReach;
 		numCheckpointsReached = 0;
 		this.endCell = endCell;
 		currentCell = startCell;
-		if(startCell.hasCheckpoint()) {
-			if(currentCell.getCheckpoint().addEncounteredPlayer(this)) {
-				numCheckpointsReached++;
-			}
-		}
-		currentDirection = Direction.EAST;
+		currentDirection = Direction.RIGHT;
+		checkCheckpoint();
 	}
 	
 	public Color getColor() {
@@ -45,29 +43,14 @@ public class Player extends Entity {
 
 	protected void changeDirection(Direction targetDirection) {
 		double adjustedVel = baseVel*currentCell.getSpeedMultiplier();
-		Cell adjacentCell = currentCell.getAdjacentCell(targetDirection);
-		if(adjacentCell == null) {
-			switch(targetDirection) {
-			case NORTH: case SOUTH:
-				if(y == currentCell.getY()) {
-					queuedDirection = targetDirection;
-				} else {
-					currentDirection = targetDirection;
-					queuedDirection = null;
-				} break;
-			case WEST: case EAST:
-				if(x == currentCell.getX()) {
-					queuedDirection = targetDirection;
-				} else {
-					currentDirection = targetDirection;
-					queuedDirection = null;
-				} break;
-			}
+		Cell neighbouringCell = currentCell.getNeighbouringCell(targetDirection);
+		boolean adjacent = currentCell.isAdjacentTo(neighbouringCell);
+		if(!adjacent) {
+			queuedDirection = targetDirection;
 		} else {
-			double tolerance = 0;
+			double tolerance = (adjustedVel)*toleranceConstant;
 			switch(targetDirection) {
-			case NORTH: case SOUTH:
-				tolerance = (adjustedVel/currentCell.getWidth())*2;
+			case UP: case DOWN:
 				if(x >= currentCell.getX() - tolerance*currentCell.getWidth() && x <= currentCell.getX() + tolerance*currentCell.getWidth()) {
 					x = currentCell.getX();
 					currentDirection = targetDirection;
@@ -75,8 +58,7 @@ public class Player extends Entity {
 				} else {
 					queuedDirection = targetDirection;
 				} break;
-			case WEST: case EAST:
-				tolerance = (adjustedVel/currentCell.getHeight())*2;
+			case LEFT: case RIGHT:
 				if(y >= currentCell.getY() - tolerance*currentCell.getHeight() && y <= currentCell.getY() + tolerance*currentCell.getHeight()) {
 					y = currentCell.getY();
 					currentDirection = targetDirection;
@@ -88,48 +70,53 @@ public class Player extends Entity {
 		}
 	}
 		
-	private void move(double delta) {
-		Cell adjacentCell = currentCell.getAdjacentCell(currentDirection);
+	private void move() {
+		Cell neighbouringCell = currentCell.getNeighbouringCell(currentDirection);
+		boolean adjacent = currentCell.isAdjacentTo(neighbouringCell);
 		double adjustedVel = baseVel*currentCell.getSpeedMultiplier();
 		//assumes you +/- vel*delta doesn't make you skip an entire cell (which should be true)
 		switch (currentDirection) {
-		case NORTH:
-			if (adjacentCell == null && y - baseVel * delta < currentCell.getY()) {
+		case UP:
+			if (!adjacent && y - adjustedVel < currentCell.getY()) {
 				y = currentCell.getY();
 			} else {
-				y -= adjustedVel * delta;
+				y -= adjustedVel;
 			}
 			break;
-		case SOUTH:
-			if (adjacentCell == null && y + baseVel * delta > currentCell.getY()) {
+		case DOWN:
+			if (!adjacent && y + adjustedVel > currentCell.getY()) {
 				y = currentCell.getY();
 			} else {
-				y += adjustedVel * delta;
+				y += adjustedVel;
 			}
 			break;
-		case EAST:
-			if (adjacentCell == null && x + baseVel * delta > currentCell.getX()) {
+		case RIGHT:
+			if (!adjacent && x + adjustedVel > currentCell.getX()) {
 				x = currentCell.getX();
 			} else {
-				x += adjustedVel * delta;
+				x += adjustedVel;
 			}
 			break;
-		case WEST:
-			if (adjacentCell == null && x - baseVel * delta < currentCell.getX()) {
+		case LEFT:
+			if (!adjacent && x - adjustedVel < currentCell.getX()) {
 				x = currentCell.getX();
 			} else {
-				x -= adjustedVel * delta;
+				x -= adjustedVel;
 			}
 			break;
 		}
-		if (adjacentCell != null) {
-			if (adjacentCell.isInCell(getCentreX(), getCentreY())) {
-				currentCell = adjacentCell;
-				if(currentCell.hasCheckpoint()) {
-					if(currentCell.getCheckpoint().addEncounteredPlayer(this)) {
-						numCheckpointsReached++;
-					}
-				}	
+		if (adjacent) {
+			if (neighbouringCell.isInCell(getCentreX(), getCentreY())) {
+				currentCell = neighbouringCell;
+				checkCheckpoint();
+			}
+		}
+	}
+	
+	private void checkCheckpoint() {
+		if(currentCell.isCheckpoint()) {
+			if(currentCell.addEncounteredPlayer(this)) {
+				numCheckpointsReached++;
 			}
 		}
 	}
@@ -139,11 +126,11 @@ public class Player extends Entity {
 	}
 
 	@Override
-	public void update(double delta) {
+	public void update() {
 		if(queuedDirection != null) {
-			changeDirection(Direction.valueOf(queuedDirection.toString()));
+			changeDirection(queuedDirection);
 		}
-		move(delta);
+		move();
 	}
 
 	@Override

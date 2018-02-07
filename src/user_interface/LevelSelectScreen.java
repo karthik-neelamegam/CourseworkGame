@@ -74,20 +74,9 @@ public class LevelSelectScreen implements Screen {
 
 	}
 
-	@Override
-	public void enter() {
-		// TODO Auto-generated method stub
-
-	}
 
 	@Override
-	public void leave() {
-		screenDisplayer = null;
-		gameMode = null;
-	}
-
-	@Override
-	public void update(double delta) {
+	public void update() {
 		// TODO Auto-generated method stub
 
 	}

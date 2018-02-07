@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
+import java.util.EnumMap;
 import java.util.Set;
 
 import logic.HumanPlayer;
@@ -12,7 +13,7 @@ import map.GameConstants;
 import map.GameMap;
 import map.GameMapType;
 import map.Level;
-import map.SurfacePicker;
+import map.Surface;
 
 public abstract class GameScreen implements Screen {
 
@@ -48,14 +49,14 @@ public abstract class GameScreen implements Screen {
 		double wallProportionOfCellDimensions = GameConstants.WALL_PROPORTION_OF_CELL_DIMENSIONS;
 		double checkpointProportionOfCellDimensions = GameConstants.CHECKPOINT_PROPORTION_OF_CELL_DIMENSIONS;
 		int numCheckpointsExcludingEndpoints = level.getNumCheckpointsExcludingEndpoints();
-		SurfacePicker surfacePicker = level.getSurfacePicker();
+		EnumMap<Surface, Double> surfaceRatios = level.getSurfaceRatios();
 		
 		Color checkpointColor = GameConstants.CHECKPOINT_COLOR;
 		Color wallColor = GameConstants.WALL_COLOR;
 		Color groundColor = GameConstants.GROUND_COLOR;
 		GameMapType mapType = level.getMapType();
 		map = new GameMap(numCellsWide, numCellsHigh, x, y, cellSideLength, deadEndProbability, wallProportionOfCellDimensions, checkpointProportionOfCellDimensions,
-				numCheckpointsExcludingEndpoints, surfacePicker, checkpointColor, wallColor,
+				numCheckpointsExcludingEndpoints, surfaceRatios, checkpointColor, wallColor,
 				groundColor, mapType);
 		players = createPlayersOnLevelSetUp(map);
 	}
@@ -102,23 +103,12 @@ public abstract class GameScreen implements Screen {
 	}
 
 	@Override
-	public void enter() {
-		
-	}
-
-	@Override
-	public void leave() {
-		map = null;
-		players = null;
-	}
-
-	@Override
-	public void update(double delta) {
+	public void update() {
 		if (!paused && !roundOver) {
-			map.update(delta);
+			map.update();
 			if(players != null) {
 				for (Player player : players) {
-					player.update(delta);
+					player.update();
 					if(player.finished()) {
 						System.out.println("FINISHED");
 						roundOver = true;
