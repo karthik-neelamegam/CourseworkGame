@@ -9,18 +9,18 @@ import map.Cell;
 public class RGVertex {
 	// no need for constant time check if a vertex is adjacent in dijksta's
 	// so don't need hashmap/hashset
-	private final List<RGAdjacency> adjacencies;
+	private final List<RGAdjacency> rgAdjacencies;
 	private final Cell superCell;
 
 	public RGVertex(Cell superCell) {
 		this.superCell = superCell;
-		adjacencies = new ArrayList<RGAdjacency>();
+		rgAdjacencies = new ArrayList<RGAdjacency>();
 	}
 
 	public void addAdjacentVertex(RGVertex otherVertex, RGEdge edge) {
 		if (otherVertex != this) {
-			adjacencies.add(new RGAdjacency(otherVertex, edge));
-			otherVertex.adjacencies.add(new RGAdjacency(this, edge));
+			rgAdjacencies.add(new RGAdjacency(otherVertex, edge));
+			otherVertex.rgAdjacencies.add(new RGAdjacency(this, edge));
 		}
 	}
 
@@ -29,7 +29,7 @@ public class RGVertex {
 	}
 
 	public List<RGAdjacency> getAdjacencies() {
-		return Collections.unmodifiableList(adjacencies);
+		return Collections.unmodifiableList(rgAdjacencies);
 	}
 
 	// reminder: make everything distance or weight (consistent)
@@ -37,8 +37,17 @@ public class RGVertex {
 		return getEdgeTo(adjacentVertex).getTotalWeight();
 	}
 
+	public void setEdgeTo(RGVertex adjacentVertex, RGEdge edge) {
+		for(RGAdjacency adjacency : rgAdjacencies) {
+			if(adjacency.getAdjacentVertex() == adjacentVertex) {
+				adjacency.setEdge(edge);
+				return;
+			}
+		}
+	}
+	
 	public RGEdge getEdgeTo(RGVertex adjacentVertex) {
-		for(RGAdjacency adjacency : adjacencies) {
+		for(RGAdjacency adjacency : rgAdjacencies) {
 			if(adjacency.getAdjacentVertex() == adjacentVertex) {
 				return adjacency.getEdge();
 			}
@@ -47,11 +56,11 @@ public class RGVertex {
 	}
 
 	public int getOrder() {
-		return adjacencies.size();
+		return rgAdjacencies.size();
 	}
 	
 	public boolean isAdjacentTo(RGVertex otherVertex) {
-		for(RGAdjacency adjacency : adjacencies) {
+		for(RGAdjacency adjacency : rgAdjacencies) {
 			if(adjacency.getAdjacentVertex() == otherVertex) {
 				return true;
 			}

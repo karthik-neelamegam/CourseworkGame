@@ -18,68 +18,6 @@ import dsa.DisjointSet;
 import dsa.FibonacciHeap;
 
 public class AIPlayer extends Player {
-	public class CheckpointVertexPair {
-		private RGVertex vertex1;
-		private RGVertex vertex2;
-
-		public CheckpointVertexPair(RGVertex vertex1, RGVertex vertex2) {
-			this.vertex1 = vertex1;
-			this.vertex2 = vertex2;
-		}
-
-		// need to check if it works
-		@Override
-		public int hashCode() {
-			return vertex1.hashCode() + vertex2.hashCode();
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			boolean equals = false;
-			if (o instanceof CheckpointVertexPair) {
-				CheckpointVertexPair otherPair = (CheckpointVertexPair) o;
-				equals = (otherPair.vertex1 == vertex1 && otherPair.vertex2 == vertex2)
-						|| (otherPair.vertex1 == vertex2 && otherPair.vertex2 == vertex1);
-			}
-			return equals;
-		}
-
-	}
-
-	public class Path {
-		private List<RGVertex> pathVertices;
-		private double totalWeight;
-
-		public Path() {
-			pathVertices = new ArrayList<RGVertex>();
-			totalWeight = 0;
-		}
-
-		public void appendVertex(RGVertex vertex) {
-			pathVertices.add(vertex);
-			if (pathVertices.size() > 1) {
-				totalWeight += vertex.getWeightToAdjacentVertex(pathVertices
-						.get(pathVertices.size() - 2));
-			}
-		}
-
-		public double getTotalWeight() {
-			return totalWeight;
-		}
-
-		public RGVertex getVertex1() {
-			return pathVertices.get(0);
-		}
-
-		public RGVertex getVertex2() {
-			return pathVertices.get(pathVertices.size() - 1);
-		}
-
-		public List<RGVertex> getPathVertices() {
-			return Collections.unmodifiableList(pathVertices);
-		}
-	}
-
 	private final ReducedGraph reducedGraph; // separating reduced graph from
 												// aiplayer so that multiple AI
 												// (monsters) could be added in
@@ -241,11 +179,11 @@ public class AIPlayer extends Player {
 				RGEdge edge = currentVertex.getEdgeTo(nextVertex);
 				List<Cell> edgeCells = edge.getCells();
 				int inclusiveStartIndex2 = 0, exclusiveEndIndex2 = edgeCells
-						.size() - 1, increment2 = 1;
+						.size(), increment2 = 1;
 				if (currentVertex.getSuperCell() == edgeCells.get(edgeCells
 						.size() - 1)) {
 					inclusiveStartIndex2 = edgeCells.size() - 1;
-					exclusiveEndIndex2 = 0;
+					exclusiveEndIndex2 = -1;
 					increment2 = -1;
 				} else if (edgeCells.get(0) != currentVertex.getSuperCell()) {
 					return null;
@@ -254,6 +192,9 @@ public class AIPlayer extends Player {
 					cellRoute.add(edgeCells.get(index2));
 				}
 			}
+		}
+		if(cellRoute.get(0) == startVertex.getSuperCell() && cellRoute.get(cellRoute.size()-1) == endVertex.getSuperCell()) {
+			System.out.println("WORKS");
 		}
 		return cellRoute;
 	}
@@ -372,8 +313,9 @@ public class AIPlayer extends Player {
 			for (i = 0; i < paths.size()
 					&& pathsAdded < checkpointVertices.size() - 3; i++) {
 				Path path = paths.get(i);
-				RGVertex vertex1 = path.getVertex1();
-				RGVertex vertex2 = path.getVertex2();
+				List<RGVertex> pathVertices = path.getPathVertices();
+				RGVertex vertex1 = pathVertices.get(0);
+				RGVertex vertex2 = pathVertices.get(pathVertices.size()-1);
 				if (vertex1 != startVertex && vertex1 != endVertex
 						&& vertex2 != startVertex && vertex2 != endVertex) {
 					if (routeAdjacencyListMap.get(vertex1).size() != 2 && routeAdjacencyListMap.get(vertex2).size() != 2
@@ -454,27 +396,15 @@ public class AIPlayer extends Player {
 		}
 		int leftIndex = 0;
 		int rightIndex = 0;
-		int insertIndex = startIndex;
-		while (leftIndex < leftHalf.size() && rightIndex < rightHalf.size()) {
-			if (leftHalf.get(leftIndex).getTotalWeight() < rightHalf.get(
-					rightIndex).getTotalWeight()) {
+		for(int insertIndex = startIndex; insertIndex < endIndex; insertIndex++) {
+			if(leftIndex < leftHalf.size() && (rightIndex >= rightHalf.size() || leftHalf.get(leftIndex).getTotalWeight() < rightHalf.get(
+					rightIndex).getTotalWeight())) {
 				paths.set(insertIndex, leftHalf.get(leftIndex));
 				leftIndex++;
-			} else {
+			}  else {
 				paths.set(insertIndex, rightHalf.get(rightIndex));
 				rightIndex++;
 			}
-			insertIndex++;
-		}
-		while (leftIndex < leftHalf.size()) {
-			paths.set(insertIndex, leftHalf.get(leftIndex));
-			leftIndex++;
-			insertIndex++;
-		}
-		while (rightIndex < rightHalf.size()) {
-			paths.set(insertIndex, rightHalf.get(rightIndex));
-			rightIndex++;
-			insertIndex++;
 		}
 	}
 
@@ -525,7 +455,7 @@ public class AIPlayer extends Player {
 	@Override
 	public void update() {
 		Cell nextRouteCell = null;
-		if (currentCellIndex < cellRoute.size() - 1) {
+		if (currentCellIndex < cellRoute.size()-1) {
 			Cell currentRouteCell = cellRoute.get(currentCellIndex);
 			nextRouteCell = cellRoute.get(currentCellIndex + 1);
 			if (currentRouteCell != nextRouteCell) {
@@ -535,6 +465,8 @@ public class AIPlayer extends Player {
 					changeDirection(targetDirection);
 				}
 			}
+		} else {
+			System.out.println("FINISHED");
 		}
 		super.update();
 		if (currentCell == nextRouteCell) {

@@ -5,7 +5,7 @@ import java.awt.Graphics;
 
 import map.Cell;
 
-public class Player extends Entity {
+public abstract class Player extends Entity {
 	private final Color color;
 	private final String name;
 	private final double baseVel;

@@ -100,7 +100,7 @@ public class GameMap extends Entity {
 
 	// this is graph traversal, cells are nodes, lack of walls are edges
 	private void initDepthFirstSearchPerfectMaze() {
-		Stack<Cell> stack = new Stack<Cell>();
+		Stack<Cell> cellStack = new Stack<Cell>();
 		Set<Cell> visitedCells = new HashSet<Cell>();
 		Cell currentCell = cells[0][0];
 		visitedCells.add(currentCell);
@@ -116,14 +116,14 @@ public class GameMap extends Entity {
 				Cell randomUnvisitedNeighbouringCell = unvisitedNeighbouringCells
 						.get(Application.rng.nextInt(unvisitedNeighbouringCells
 								.size()));
-				stack.push(currentCell);
+				cellStack.push(currentCell);
 				currentCell.setAdjacentTo(randomUnvisitedNeighbouringCell);
 				currentCell = randomUnvisitedNeighbouringCell;
 				visitedCells.add(randomUnvisitedNeighbouringCell);
-			} else if (!stack.isEmpty()) {
-				currentCell = stack.pop();
+			} else if (!cellStack.isEmpty()) {
+				currentCell = cellStack.pop();
 			}
-		} while (!stack.isEmpty());
+		} while (!cellStack.isEmpty());
 	}
 	
 /*	private void initRecursiveBacktrackerPerfectMaze() {

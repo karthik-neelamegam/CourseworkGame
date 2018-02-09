@@ -16,7 +16,7 @@ public class ReducedGraph {
 	private final Map<Cell, RGVertex> cellsToVerticesMap;
 	private final List<RGVertex> checkpointVertices;
 
-	//the cell parameter is always made a vertex
+	// the cell parameter is always made a vertex
 	public ReducedGraph(Cell cell) {
 		cellsToVerticesMap = new HashMap<Cell, RGVertex>();
 		checkpointVertices = new ArrayList<RGVertex>();
@@ -35,7 +35,8 @@ public class ReducedGraph {
 		visitedCells.add(currentVertex.getSuperCell());
 
 		// iterates through each adjacent cell and recurses (DFS)
-		for (Cell adjacentCell : currentVertex.getSuperCell().getAdjacentCells()) {
+		for (Cell adjacentCell : currentVertex.getSuperCell()
+				.getAdjacentCells()) {
 
 			// if a cell has been discovered, then it has already been dealt
 			// with in the DFS, so ignore it
@@ -68,6 +69,12 @@ public class ReducedGraph {
 					boolean recurse = false;
 					if (cellsToVerticesMap.containsKey(nextCell)) {
 						nextVertex = cellsToVerticesMap.get(nextCell);
+						if (nextVertex.isAdjacentTo(currentVertex)) {
+							if (edge.getTotalWeight() < nextVertex
+									.getWeightToAdjacentVertex(currentVertex)) {
+								nextVertex.setEdgeTo(currentVertex, edge);
+							}
+						}
 					} else {
 						nextVertex = new RGVertex(nextCell);
 						recurse = true;

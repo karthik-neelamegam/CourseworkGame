@@ -75,16 +75,10 @@ public class ScreenDisplayer extends JPanel implements KeyListener {
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		if (currentScreen != null) {
-			currentScreen.keyReleased(e);
-		}
 	}
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		if (currentScreen != null) {
-			currentScreen.keyReleased(e);
-		}
 	}
 
 }

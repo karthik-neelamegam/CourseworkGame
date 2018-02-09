@@ -36,28 +36,28 @@ public class DisjointSet<T> {
 		}
 	}
 
-	private HashMap<T, TreeVertex> vertices;
+	private HashMap<T, TreeVertex> itemsToVerticesMap;
 
 	public DisjointSet() {
-		vertices = new HashMap<T, TreeVertex>();
+		itemsToVerticesMap = new HashMap<T, TreeVertex>();
 	}
 
 	public DisjointSet(Collection<T> items) {
-		vertices = new HashMap<T, TreeVertex>();
+		itemsToVerticesMap = new HashMap<T, TreeVertex>();
 		for (T item : items) {
 			add(item);
 		}
 	}
 
 	public void add(T item) {
-		vertices.put(item, new TreeVertex());
+		itemsToVerticesMap.put(item, new TreeVertex());
 	}
 
 	public void join(T t1, T t2) {
-		vertices.get(t1).join(vertices.get(t2));
+		itemsToVerticesMap.get(t1).join(itemsToVerticesMap.get(t2));
 	}
 
 	public boolean areJoined(T t1, T t2) {
-		return vertices.get(t1).findRoot() == vertices.get(t2).findRoot();
+		return itemsToVerticesMap.get(t1).findRoot() == itemsToVerticesMap.get(t2).findRoot();
 	}
 }

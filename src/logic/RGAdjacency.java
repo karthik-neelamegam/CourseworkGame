@@ -3,7 +3,7 @@ package logic;
 
 public class RGAdjacency {
 	private final RGVertex adjacentVertex;
-	private final RGEdge edge;
+	private RGEdge edge;
 	public RGAdjacency(RGVertex adjacentVertex, RGEdge edge) {
 		this.adjacentVertex = adjacentVertex;
 		this.edge = edge;
@@ -13,5 +13,8 @@ public class RGAdjacency {
 	}
 	public RGEdge getEdge() {
 		return edge;
+	}
+	public void setEdge(RGEdge edge) {
+		this.edge = edge;
 	}
 }

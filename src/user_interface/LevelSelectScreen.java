@@ -1,12 +1,14 @@
 package user_interface;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import map.GameConstants;
 import map.Level;
 
 public class LevelSelectScreen implements Screen {
@@ -47,43 +49,20 @@ public class LevelSelectScreen implements Screen {
 			level = null;
 		}
 		if (level != null) {
-			switch (gameMode) {
-			case TWO_PLAYER:
-				screenDisplayer.setScreen(new TwoPlayerGameScreen(
-						screenDisplayer, level));
-				break;
-			case TRAINING:
-				screenDisplayer.setScreen(new TrainingGameScreen(
-						screenDisplayer, level));
-				break;
-			default:
-				break;
-			}
+			screenDisplayer.setScreen(new GameScreen(
+					screenDisplayer, gameMode, level));
 		}
 	}
 
 	@Override
-	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-
-	@Override
 	public void update() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void render(Graphics g) {
 		Color lastColor = g.getColor();
+		Font lastFont = g.getFont();
+		Font menuFont = GameConstants.getMenuFont(screenDisplayer.getHeight());
 		String instructionsMessage = "Select a level (Press the key indicated in brackets): ";
 		List<String> levelMessages = new ArrayList<String>();
 		levelMessages.add("[1] Level One");
@@ -93,7 +72,7 @@ public class LevelSelectScreen implements Screen {
 		levelMessages.add("[5] Level Five");
 		levelMessages.add("[6] Level Six");
 		String exitMessage = "Press: [ESC] to exit to main menu";
-		FontMetrics fontMetrics = g.getFontMetrics();
+		FontMetrics fontMetrics = g.getFontMetrics(menuFont);
 		int maxWidth = 0;
 		for (String levelMessage : levelMessages) {
 			int width = fontMetrics.stringWidth(levelMessage);
@@ -101,12 +80,11 @@ public class LevelSelectScreen implements Screen {
 				maxWidth = width;
 			}
 		}
-		g.setColor(Color.BLACK);
-		g.fillRect(0, 0, screenDisplayer.getWidth(),
-				screenDisplayer.getHeight());
-		g.setColor(Color.WHITE);
+		g.drawImage(GameConstants.MENU_BACKGROUND_IMAGE, 0, 0, screenDisplayer.getWidth(),
+				screenDisplayer.getHeight(), null);
+		g.setColor(GameConstants.MENU_TEXT_COLOR);
 		g.drawString(instructionsMessage,
-				(screenDisplayer.getWidth() - fontMetrics
+				(screenDisplayer.getWidth() - g.getFontMetrics(menuFont)
 						.stringWidth(instructionsMessage)) / 2,
 				screenDisplayer.getHeight() / (levelMessages.size() + 3));
 		for (int i = 0; i < levelMessages.size(); i++) {
@@ -120,6 +98,7 @@ public class LevelSelectScreen implements Screen {
 				(screenDisplayer.getWidth() - fontMetrics
 						.stringWidth(exitMessage)) / 2,
 						(levelMessages.size() + 2)*screenDisplayer.getHeight() / (levelMessages.size() + 3));
+		g.setFont(lastFont);
 		g.setColor(lastColor);
 	}
 
