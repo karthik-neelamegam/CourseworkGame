@@ -1,10 +1,17 @@
 package logic;
 
-import user_interface.Application;
-
 public enum Direction {
+	/*
+	 * The predefined constants, representing the four possible directions that
+	 * each cell can be from adjacent cells and also the four directions a
+	 * player can move.
+	 */
 	UP, DOWN, RIGHT, LEFT;
-	private final static Direction[] directions = Direction.values();
+
+	/*
+	 * Returns the opposite Direction constant (self-explanatory) for each of
+	 * the four cases.
+	 */
 	public Direction getOpposite() {
 		Direction opposite = null;
 		switch (this) {
@@ -22,8 +29,5 @@ public enum Direction {
 			break;
 		}
 		return opposite;
-	}
-	public final static Direction getRandom() {
-		return directions[Application.rng.nextInt(directions.length)];
 	}
 }

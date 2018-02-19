@@ -10,7 +10,14 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class GameConstants {
-	
+	/*
+	 * This class contains some core global named constants that are used in the
+	 * game. This makes it easy to change some constants for testing purposees.
+	 * It also makes the code easier to maintain as changing the value of one
+	 * constant only has to be done in one place. Also, it makes the code easier
+	 * to understand as the purpose of the constant is clear by the name.
+	 */
+
 	public static final Color PLAYER1_COLOR = Color.GREEN;
 	public static final Color PLAYER2_COLOR = Color.RED;
 	public static final int PLAYER1_UP = KeyEvent.VK_W;
@@ -24,37 +31,46 @@ public class GameConstants {
 	public static final double PLAYER_BASE_VELOCITY_PROPORTION_OF_CELL_DIMENSIONS = 0.05;
 	public static final double AI_PLAYER_BASE_VELOCITY_PROPORTION_OF_CELL_DIMENSIONS = 0.04;
 
-	public static final double PLAYER_TOLERANCE_CONSTANT = 0.02;
-	public static final double PLAYER_PROPORTION_OF_CELL_DIMENSIONS = 7d/8d;
+	public static final double PLAYER_TOLERANCE_CONSTANT = 0.03;
+	public static final double PLAYER_PROPORTION_OF_CELL_DIMENSIONS = 7d / 8d;
 	public static final String PLAYER1_DEFAULT_NAME = "GREEN";
 	public static final String PLAYER2_DEFAULT_NAME = "RED";
 
 	public static final Color CHECKPOINT_COLOR = Color.YELLOW;
-	public static final double CHECKPOINT_PROPORTION_OF_CELL_DIMENSIONS = 7d/8d;
+	public static final double CHECKPOINT_PROPORTION_OF_CELL_DIMENSIONS = 7d / 8d;
 	public static final Color GROUND_COLOR = Color.WHITE;
 	public static final Color WALL_COLOR = Color.BLACK;
 	public static final double WALL_PROPORTION_OF_CELL_DIMENSIONS = 0.1;
 	public static final Color SLOW_SURFACE_COLOR = new Color(165, 42, 42, 127);
 	public static final Color NORMAL_SURFACE_COLOR = GROUND_COLOR;
 	public static final Color FAST_SURFACE_COLOR = new Color(0, 255, 255, 127);
-	
+
 	public static final Color MENU_TEXT_COLOR = Color.WHITE;
 	public static final String MENU_TEXT_FONT_TYPE = Font.SANS_SERIF;
 	public static final int MENU_TEXT_FONT_STYLE = Font.PLAIN;
 	public static final double MENU_TEXT_FONT_PROPORTION_OF_SCREEN_HEIGHT = 0.03;
+
 	public static Font getMenuFont(int screenDisplayerHeight) {
-		return new Font(MENU_TEXT_FONT_TYPE, MENU_TEXT_FONT_STYLE, (int)(screenDisplayerHeight*MENU_TEXT_FONT_PROPORTION_OF_SCREEN_HEIGHT));
+		return new Font(
+				MENU_TEXT_FONT_TYPE,
+				MENU_TEXT_FONT_STYLE,
+				(int) (screenDisplayerHeight * MENU_TEXT_FONT_PROPORTION_OF_SCREEN_HEIGHT));
 	}
 
 	public static final Color TITLE_TEXT_COLOR = Color.YELLOW;
 	public static final String TITLE_TEXT_FONT_TYPE = Font.SERIF;
 	public static final int TITLE_TEXT_FONT_STYLE = Font.ITALIC;
 	public static final double TITLE_TEXT_FONT_PROPORTION_OF_SCREEN_HEIGHT = 0.07;
+
 	public static Font getTitleFont(int screenDisplayerHeight) {
-		return new Font(TITLE_TEXT_FONT_TYPE, TITLE_TEXT_FONT_STYLE, (int)(screenDisplayerHeight*TITLE_TEXT_FONT_PROPORTION_OF_SCREEN_HEIGHT));
+		return new Font(
+				TITLE_TEXT_FONT_TYPE,
+				TITLE_TEXT_FONT_STYLE,
+				(int) (screenDisplayerHeight * TITLE_TEXT_FONT_PROPORTION_OF_SCREEN_HEIGHT));
 	}
 
 	public static final Image MENU_BACKGROUND_IMAGE = getMenuBackgroundImage();
+
 	private static Image getMenuBackgroundImage() {
 		Image menuBackgroundImage = null;
 		try {
@@ -64,6 +80,6 @@ public class GameConstants {
 		}
 		return menuBackgroundImage;
 	}
-	
+
 	public static final Color GAME_OVERLAY_COLOR = new Color(0, 0, 0, 0.7f);
 }
