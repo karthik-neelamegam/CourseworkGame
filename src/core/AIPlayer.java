@@ -1,4 +1,4 @@
-package logic;
+package core;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -13,13 +13,7 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import map.Cell;
-import user_interface.Application;
-
 import com.google.common.collect.Collections2;
-
-import dsa.DisjointSet;
-import dsa.FibonacciHeap;
 
 public class AIPlayer extends Player {
 	/*
@@ -44,7 +38,7 @@ public class AIPlayer extends Player {
 		/*
 		 * The two checkpoint RGVertex objects. This is aggregation as the
 		 * CheckpointVertexPair class has a HAS-A relationship with the RGVertex
-		 * class but the CheckpointVertex1 and CheckpointVertex2 objects will
+		 * class but the checkpointVertex1 and checkpointVertex2 objects will
 		 * not be destroyed if the CheckpointVertexPair object is destroyed.
 		 */
 		private final RGVertex checkpointVertex1;
@@ -116,19 +110,22 @@ public class AIPlayer extends Player {
 	 * of RGVertex objects) between every pair of RGVertex objects (representing
 	 * all the pairs of checkpoint Cell objects in the maze), which are found in
 	 * the CheckpointVertexPair objects (keys). This is effectively an adjacency
-	 * matrix for a graph (the checkpoint graph) where the vertices are the
-	 * checkpoint RGVertex objects and the edges are the shortest paths (made up
-	 * of RGVertex objects) between every pair of checkpoint RGVertex objects.
-	 * The Map interface is used rather than a concrete class such as HashMap
-	 * because it separates the actual implementation of the Map interface from
-	 * this class's use of the interface's methods, allowing the implementation
-	 * to change (say, from HashMap to Hashtable) in the future. This is
-	 * composition as the AIPlayer class has a HAS-A relationship with the
-	 * CheckpointVertexPair class and the CheckpointVertexPair objects in the
+	 * matrix for a weighted, undirected, complete graph (the checkpoint graph),
+	 * where the vertices are all of the checkpoint RGVertex objects in the
+	 * reduced graph and the edges are the RGPath objects representing the
+	 * shortest paths between them; the weight of an edge (an RGPath object) is
+	 * the total weight of all of the RGEdges in the path of RGVertex objects
+	 * represented by the RGPath object. The Map interface is used rather than a
+	 * concrete class such as HashMap because it separates the actual
+	 * implementation of the Map interface from this class's use of the
+	 * interface's methods, allowing the implementation to change (say, from
+	 * HashMap to Hashtable) in the future. This is composition as the AIPlayer
+	 * class has a HAS-A relationship with the CheckpointVertexPair class and
+	 * the CheckpointVertexPair objects in the
 	 * shortestPathsBetweenCheckpointVertices hash table will be destroyed if
 	 * the AIPlayer object is destroyed. This is composition as the AIPlayer
 	 * class has a HAS-A relationship with the RGPath class and the RGPath
-	 * objects in the ShortestPathsBetweenCheckpointVertices hash table will be
+	 * objects in the shortestPathsBetweenCheckpointVertices hash table will be
 	 * destroyed if the AIPlayer object is destroyed.
 	 */
 	private final Map<CheckpointVertexPair, RGPath> shortestPathsBetweenCheckpointVertices;
@@ -169,14 +166,14 @@ public class AIPlayer extends Player {
 		 * required for the latter part.
 		 */
 		shortestPathsBetweenCheckpointVertices = initShortestPathsBetweenCheckpointVertices();
-		cellRoute = generateCellRoute(reducedGraph.getVertex(startCell), reducedGraph.getVertex(endCell));
+		cellRoute = generateCellRoute(reducedGraph.getVertex(startCell),
+				reducedGraph.getVertex(endCell));
 
 		/*
 		 * The AIPlayer starts at the first Cell object in the cellRoute list
 		 * (which should be startCell).
 		 */
 		currentCellIndex = 0;
-		printCellRoute();
 	}
 
 	/*
@@ -616,14 +613,20 @@ public class AIPlayer extends Player {
 		return cellRoute;
 	}
 
+	/*
+	 * Uses the greedy tour construction heuristic to generate an ordered list
+	 * of RGVertex objects, representing the route of super cells that the AI
+	 * player should visit, which starts at startVertex, visits all the
+	 * checkpoint RGVertex objects, and finishes at endVertex.
+	 */
 	private List<RGVertex> generateGreedyCheckpointVertexRoute(
 			RGVertex startVertex, RGVertex endVertex) {
 
 		/*
 		 * If startVertex and endVertex don’t represent checkpoints, then the
-		 * algorithm won’t work as the ShortestPathsBetweenCheckpointVertices
-		 * hash table would not have keys that include the StartVertex and
-		 * EndVertex. This should not happen and must indicate a logical error
+		 * algorithm won’t work as the shortestPathsBetweenCheckpointVertices
+		 * hash table would not have keys that include the startVertex and
+		 * endVertex. This should not happen and must indicate a logical error
 		 * elsewhere in the code, and a try-catch block would not be useful as
 		 * the issue cannot be fixed without changing the code. Throwing a
 		 * runtime exception here would make debugging and tracing the error
@@ -635,7 +638,7 @@ public class AIPlayer extends Player {
 		}
 
 		/*
-		 * All the traversable RGVertex objects in the reduced graph.
+		 * All the traversable checkpoint RGVertex objects in the reduced graph.
 		 */
 		List<RGVertex> checkpointVertices = reducedGraph
 				.getCheckpointVertices();
@@ -781,8 +784,8 @@ public class AIPlayer extends Player {
 				+ getShortestPathWeightBetweenCheckpointVertices(
 						orderOneCheckpointVertex1, endVertex)) {
 			/*
-			 * Then connect StartVertex to OrderOneCheckpointVertex1 and connect
-			 * EndVertex to OrderOneCheckpointVertex2.
+			 * Then connect startVertex to orderOneCheckpointVertex1 and connect
+			 * endVertex to orderOneCheckpointVertex2.
 			 */
 			routeAdjacencyListMap.get(orderOneCheckpointVertex1).add(
 					startVertex);
@@ -792,8 +795,8 @@ public class AIPlayer extends Player {
 			routeAdjacencyListMap.get(endVertex).add(orderOneCheckpointVertex2);
 		} else {
 			/*
-			 * Then connect StartVertex to OrderOneCheckpointVertex2 and connect
-			 * EndVertex to OrderOneCheckpointVertex1.
+			 * Then connect startVertex to orderOneCheckpointVertex2 and connect
+			 * endVertex to orderOneCheckpointVertex1.
 			 */
 			routeAdjacencyListMap.get(orderOneCheckpointVertex2).add(
 					startVertex);
@@ -834,7 +837,8 @@ public class AIPlayer extends Player {
 		 * checkpoint RGVertex object to the checkpointVertexRoute list and then
 		 * repeat from that checkpoint RGVertex object, and so on, until all the
 		 * checkpoint RGVertex objects have been added to the
-		 * checkpointVertexRoute list.
+		 * checkpointVertexRoute list. In effect, we are traversing along the
+		 * greedy checkpoint route subgraph.
 		 */
 		while (checkpointVertexRoute.size() < checkpointVertices.size()) {
 			ArrayList<RGVertex> adjacencyList = routeAdjacencyListMap
@@ -955,6 +959,13 @@ public class AIPlayer extends Player {
 		}
 	}
 
+	/*
+	 * Returns the result of performing the 2-opt tour improvement heuristic on
+	 * a given ordered list of RGVertex objects, representing the route of super
+	 * Cell objects that the AI player should visit, which starts at
+	 * startVertex, visits all the All the checkpoint RGVertex objects, and
+	 * finishes at endVertex.
+	 */
 	private List<RGVertex> twoOpt(List<RGVertex> checkpointVertexRoute) {
 		/*
 		 * This list stores the route of checkpoint RGVertex objects as it is
@@ -985,7 +996,7 @@ public class AIPlayer extends Player {
 			 * need to be selected. The following nested For loop is used to
 			 * find two different checkpoint RGVertex objects (checkpointVertexB
 			 * and checkpointVertexC) in the improvedCheckpointVertexRoute list
-			 * (that are not the endpoint checkpoing RGVertex objects, which are
+			 * (that are not the endpoint checkpoint RGVertex objects, which are
 			 * at the first and last index of the list). The other two
 			 * checkpoint RGVertex objects (checkpointVertexA and
 			 * checkpointVertexD are found from subtracting 1 from the index of
@@ -1068,15 +1079,15 @@ public class AIPlayer extends Player {
 
 	/*
 	 * Inherited and overridden from the Player class (polymorphism). It is
-	 * called every game cycle. It uses the CellRoute list and and the
-	 * CurrentCellIndex variable to determine the next cell to which the AI
+	 * called every game cycle. It uses the cellRoute list and and the
+	 * currentCellIndex variable to determine the next cell to which the AI
 	 * player must move and then attempts to change direction if needed. Updates
-	 * the CurrentCellIndex once it moves to the next cell.
+	 * currentCellIndex once it moves to the next cell.
 	 */
 	@Override
 	public void update() {
 		Cell nextRouteCell = null;
-		
+
 		/*
 		 * Once currentCellIndex = cellRoute.size() - 1, the AIPlayer object has
 		 * reached the final Cell object so no more changes of directions are
@@ -1085,8 +1096,7 @@ public class AIPlayer extends Player {
 		if (currentCellIndex < cellRoute.size() - 1) {
 			Cell currentRouteCell = cellRoute.get(currentCellIndex);
 			nextRouteCell = cellRoute.get(currentCellIndex + 1);
-			if(!currentRouteCell.isAdjacentTo(nextRouteCell)) {
-			}
+
 			/*
 			 * If currentRouteCell = nextRouteCell, then that means calling
 			 * getDirectionToNeighbouringCell will result in an error (as a Cell
@@ -1095,10 +1105,10 @@ public class AIPlayer extends Player {
 			if (currentRouteCell != nextRouteCell) {
 
 				/*
-				 * The target direction required to move from the currentCell to
-				 * the nextRouteCell is retrieved and the inherited
-				 * changeDirection method is called to change the AIPlayer
-				 * object's direction to this target direction if required.
+				 * The target direction required to move from currentCell to
+				 * nextRouteCell is retrieved and the inherited changeDirection
+				 * method is called to change the AIPlayer object's direction to
+				 * this target direction if required.
 				 */
 				Direction targetDirection = currentRouteCell
 						.getDirectionToNeighbouringCell(nextRouteCell);
@@ -1114,8 +1124,8 @@ public class AIPlayer extends Player {
 		super.update();
 
 		/*
-		 * Updates the currentCellIndex once the AIPlayer has successfully moved
-		 * to the next Cell object in the route.
+		 * Updates currentCellIndex once the AIPlayer has successfully moved to
+		 * the next Cell object in the route.
 		 */
 		if (currentCell == nextRouteCell) {
 			currentCellIndex++;
@@ -1125,75 +1135,6 @@ public class AIPlayer extends Player {
 	/*
 	 * Tests.
 	 */
-
-	private List<RGVertex> generateRandomisedNearestNeighbourCheckpointVertexRoute(
-			RGVertex startVertex, RGVertex endVertex, int numCands) {
-		// defensive programming (ctrl-f Exception or throw), prob can get rid
-		// of it, if you decide to keep it, check for it elsewhere
-		List<RGVertex> route = null;
-		List<RGVertex> checkpointVertices = reducedGraph
-				.getCheckpointVertices();
-		if (startVertex.getSuperCell().isCheckpoint()
-				&& endVertex.getSuperCell().isCheckpoint()) {
-			Set<RGVertex> unselectedVertices = new HashSet<RGVertex>(
-					checkpointVertices);
-			route = new ArrayList<RGVertex>();
-			unselectedVertices.remove(startVertex);
-			unselectedVertices.remove(endVertex);
-			route.add(startVertex);
-			RGVertex currentVertex = startVertex;
-			class Candidate implements Comparable<Candidate> {
-				private final RGVertex vertex;
-				private final double weight;
-
-				public Candidate(RGVertex node, double weight) {
-					this.vertex = node;
-					this.weight = weight;
-				}
-
-				public RGVertex getVertex() {
-					return vertex;
-				}
-
-				@Override
-				public int compareTo(Candidate other) {
-					return Double.compare(other.weight, weight);
-				}
-			}
-
-			while (unselectedVertices.size() > 0) {
-				PriorityQueue<Candidate> candidates = new PriorityQueue<Candidate>();
-				for (RGVertex vertex : unselectedVertices) {
-					double distance = getShortestPathWeightBetweenCheckpointVertices(
-							currentVertex, vertex);
-					Candidate cand = new Candidate(vertex, distance);
-					if (candidates.size() < numCands) {
-						candidates.add(cand);
-					} else if (cand.compareTo(candidates.peek()) > 0) {
-						candidates.poll();
-						candidates.add(cand);
-					}
-				}
-				int randIndex = Application.randomNumberGenerator
-						.nextInt(candidates.size());
-				int i = 0;
-				Candidate selectedCandidate = null;
-				for (Candidate cand : candidates) {
-					if (i == randIndex) {
-						selectedCandidate = cand;
-						break;
-					}
-					i++;
-				}
-				RGVertex selectedVertex = selectedCandidate.getVertex();
-				unselectedVertices.remove(selectedVertex);
-				route.add(selectedVertex);
-				currentVertex = selectedVertex;
-			}
-			route.add(endVertex);
-		}
-		return route;
-	}
 
 	private List<RGVertex> generateOptimalCheckpointVertexRoute(
 			RGVertex startVertex, RGVertex endVertex) {
@@ -1683,13 +1624,13 @@ public class AIPlayer extends Player {
 			}
 		}
 	}
-	
+
 	private void printCellRoute() {
-		for(Cell cell : cellRoute) {
+		for (Cell cell : cellRoute) {
 			System.out.print(cell.testID + ", ");
 		}
 	}
-	
+
 	@Override
 	public void render(Graphics graphics) {
 		super.render(graphics);

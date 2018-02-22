@@ -1,4 +1,4 @@
-package logic;
+package core;
 
 import java.awt.Graphics;
 
@@ -64,15 +64,6 @@ public abstract class Entity {
 	}
 
 	/*
-	 * Returns the pixel distance between the centre co-ordinates of this Entity
-	 * object and those of the other parameter.
-	 */
-	public double getDistanceBetweenCentres(Entity other) {
-		return Math.sqrt(Math.pow(getCentreX() - other.getCentreX(), 2)
-				+ Math.pow(getCentreY() - other.getCentreY(), 2));
-	}
-
-	/*
 	 * Getters and setters.
 	 */
 
@@ -80,16 +71,8 @@ public abstract class Entity {
 		return x;
 	}
 
-	public void setX(double x) {
-		this.x = x;
-	}
-
 	public double getY() {
 		return y;
-	}
-
-	public void setY(double y) {
-		this.y = y;
 	}
 
 	public double getWidth() {

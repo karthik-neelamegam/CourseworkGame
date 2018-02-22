@@ -1,9 +1,11 @@
-package logic;
+package core;
 
 public class RGAdjacency {
 	/*
 	 * This class is essentially a container storing two variables: an adjacent
-	 * RGVertex object and the RGEdge object to this Cell object.
+	 * RGVertex object and the RGEdge object to this this RGVertex object from
+	 * the parent RGVertex where this RGAdjacency object would have been created
+	 * and stored.
 	 */
 
 	/*
@@ -15,10 +17,10 @@ public class RGAdjacency {
 	private final RGVertex adjacentVertex;
 
 	/*
-	 * The RGEdge object to adjacentVertex from the RGVertex object where this
-	 * RGAdjacency object would be stored. This is aggregation as the
-	 * RGAdjacency class has a HAS-A relationship with the RGEdge class but the
-	 * edge object will not be destroyed if the RGAdjacency object is destroyed.
+	 * The RGEdge object to adjacentVertex from the parent RGVertex object. This
+	 * is aggregation as the RGAdjacency class has a HAS-A relationship with the
+	 * RGEdge class but the edge object will not be destroyed if the RGAdjacency
+	 * object is destroyed.
 	 */
 	private RGEdge edge;
 
@@ -29,11 +31,11 @@ public class RGAdjacency {
 		this.adjacentVertex = adjacentVertex;
 		this.edge = edge;
 	}
-	
+
 	/*
 	 * Getters and setters.
 	 */
-	
+
 	public RGVertex getAdjacentVertex() {
 		return adjacentVertex;
 	}

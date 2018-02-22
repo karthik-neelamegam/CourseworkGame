@@ -1,4 +1,4 @@
-package map;
+package core;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -10,11 +10,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
-
-import logic.Direction;
-import logic.Entity;
-import user_interface.Application;
-import dsa.DisjointSet;
 
 public class Maze extends Entity {
 	/*
@@ -30,9 +25,9 @@ public class Maze extends Entity {
 
 	/*
 	 * A matrix storing all the Cell objects in the maze, representing the
-	 * arrangement of cells in the rectangular grid maze. This is composition as
-	 * the Maze class has a HAS-A relationship with the Cell class and the Cell
-	 * objects in the cells matrix will be destroyed if the Maze object is
+	 * arrangement of cells in the rectangular grid maze. This is aggregation as
+	 * the Maze class has a HAS-A relationship with the Cell class but the Cell
+	 * objects in the cells matrix will not be destroyed if the Maze object is
 	 * destroyed.
 	 */
 	private final Cell[][] cells;
@@ -114,7 +109,6 @@ public class Maze extends Entity {
 		 * Randomly sets a given number of Cell objects as checkpoints.
 		 */
 		placeCheckpoints(numCheckpointsExcludingEndpoints);
-		printSurfaceAndDeadEndRatios();
 	}
 
 	/*
@@ -262,7 +256,7 @@ public class Maze extends Entity {
 		/*
 		 * This set keeps track of Cell objects that have been visited, so that
 		 * walls of Cell objects that have already been visited are not carved
-		 * (to prevent loops from being made in the maze).
+		 * (to prevent cycles from being made in the maze).
 		 */
 		Set<Cell> visitedCells = new HashSet<Cell>();
 		Cell currentCell = cells[0][0];
@@ -271,9 +265,9 @@ public class Maze extends Entity {
 
 			/*
 			 * The algorithm needs to carve a wall of an unvisited neighbouring
-			 * Cell object to prevent loops from being made in the maze, so this
+			 * Cell object to prevent cycles from being made in the maze, so this
 			 * section of code tries to select an unvisited neighbouring Cell
-			 * object if there is one
+			 * object if there is one.
 			 */
 
 			List<Cell> unvisitedNeighbouringCells = new ArrayList<Cell>();
@@ -322,7 +316,7 @@ public class Maze extends Entity {
 				visitedCells.add(randomUnvisitedNeighbouringCell);
 				/*
 				 * The loop repeats with the neighbouring Cell object as the
-				 * next CurrentCell, the algorithm carries on like this until it
+				 * next currentCell, the algorithm carries on like this until it
 				 * reaches a Cell object with no unvisited neighbouring Cell
 				 * objects, in which case it has reached a dead end and program
 				 * flow will go to the else statement below.
@@ -560,8 +554,8 @@ public class Maze extends Entity {
 	}
 
 	/*
-	 * Makes a number (equal to NumCheckpointsExlcudingEndpoints) of random Cell
-	 * objects in the initialised Cells Matrix checkpoints. Also makes the
+	 * Makes a number (equal to numCheckpointsExlcudingEndpoints) of random Cell
+	 * objects in the initialised cells matrix checkpoints. Also makes the
 	 * endpoint cells checkpoints.
 	 */
 	private void placeCheckpoints(int numCheckpointsExcludingEndpoints) {
@@ -755,18 +749,18 @@ public class Maze extends Entity {
 		 * each surface (Slow, Normal, Fast).
 		 */
 		int slows = 0, normals = 0, fasts = 0;
-	
+
 		/*
 		 * This variable is to count the number of dead ends in the maze.
 		 */
 		int deadEnds = 0;
-	
+
 		/*
 		 * Iterate over all the Cell objects in the maze.
 		 */
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
-	
+
 				/*
 				 * Find which surface each Cell object has and increment the
 				 * relevant counting variable.
@@ -781,7 +775,7 @@ public class Maze extends Entity {
 						.getSpeedMultiplier()) {
 					fasts++;
 				}
-	
+
 				/*
 				 * If a cell has order 1, it is a dead end.
 				 */
@@ -790,7 +784,7 @@ public class Maze extends Entity {
 				}
 			}
 		}
-	
+
 		/*
 		 * These variables store the percentage of Cell objects in the maze that
 		 * have each surface.
@@ -798,14 +792,14 @@ public class Maze extends Entity {
 		double slowsRatio = 100 * slows / (cells.length * cells[0].length);
 		double normalsRatio = 100 * normals / (cells.length * cells[0].length);
 		double fastsRatio = 100 * fasts / (cells.length * cells[0].length);
-	
+
 		/*
 		 * This variable stores the percentage of Cell objects in the maze that
 		 * are dead ends.
 		 */
 		double deadEndsRatio = 100 * deadEnds
 				/ (cells.length * cells[0].length);
-	
+
 		/*
 		 * Output the results.
 		 */

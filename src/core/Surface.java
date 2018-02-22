@@ -1,4 +1,4 @@
-package map;
+package core;
 
 import java.awt.Color;
 
@@ -13,7 +13,7 @@ public enum Surface {
 
 	/*
 	 * The value by which the speed of Player objects moving over Cell objects
-	 * with this Surface is multiplied by. If this value is 1, the speed doesn't
+	 * with this Surface is multiplied. If this value is 1, the speed doesn't
 	 * change. If this value is less than 1, the speed decreases. If this value
 	 * is greater than 1, the speed increases.
 	 */

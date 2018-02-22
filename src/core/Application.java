@@ -1,4 +1,4 @@
-package user_interface;
+package core;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -7,13 +7,6 @@ import java.util.EnumMap;
 import java.util.Random;
 
 import javax.swing.JFrame;
-
-import logic.AIPlayer;
-import logic.ReducedGraph;
-import map.GameConstants;
-import map.Maze;
-import map.MazeType;
-import map.Surface;
 
 public class Application {
 	/*
@@ -85,15 +78,17 @@ public class Application {
 	 * the window is large and the game is clear). The gameHz parameter is 60
 	 * (as most monitors only display 60 frames per second) and the random seed
 	 * is the current time (so that it is different every time the user runs the
-	 * game, giving different mazes every time).
+	 * game, giving different mazes every time). Named constants have been used
+	 * for clarity.
 	 */
 	public static void main(String[] args) {
-		new Application(0.7, 1, 60, System.currentTimeMillis());
-		//Application.beforeVsAfterTwoOptCheckpointVertexRouteTest();
+		new Application(GameConstants.WINDOW_SCREEN_HEIGHT_FRACTION,
+				GameConstants.WINDOW_ASPECT_RATIO, GameConstants.GAME_HZ,
+				System.currentTimeMillis());
 	}
 
 	/*
-	 * Tests
+	 * Tests.
 	 */
 
 	public static Maze generateRandomMaze(double deadEndProbability) {
@@ -462,7 +457,7 @@ public class Application {
 							reducedGraph.getVertex(maze.getStartCell()));
 
 			/*
-			 * If the the greedy weight is greater than the random weight, we
+			 * If the greedy weight is greater than the random weight, we
 			 * increment the relevant variable and output the difference (to see
 			 * how significant the difference is).
 			 */
@@ -511,20 +506,20 @@ public class Application {
 		 * results are reliable and valid.
 		 */
 		int numTests = 1000;
-	
+
 		/*
 		 * Keeps track of the number of times the twoOpt method increases the
 		 * weight of the greedy checkpoint route that it is applied to.
 		 */
 		int numCasesWhereWeightIncreasesAfterTwoOpt = 0;
-	
+
 		/*
 		 * Keeps track of the sum of the percentage drops in the weight of the
 		 * greedy checkpoint route from before the twoOpt method is applied to
 		 * after.
 		 */
 		double sumOfPercentageDropsInWeightAfterTwoOpt = 0;
-	
+
 		/*
 		 * This loop generates a number of cases equal to numTests and finds the
 		 * percentage drop in the weight of the greedy checkpoint route from
@@ -537,14 +532,14 @@ public class Application {
 			 * results are not biased.
 			 */
 			double deadEndProbability = randomNumberGenerator.nextDouble();
-	
+
 			/*
 			 * Generate a random maze with this dead-end probability to ensure
 			 * that the test results are not biased.
 			 */
 			Maze maze = generateRandomMaze(deadEndProbability);
 			ReducedGraph reducedGraph = new ReducedGraph(maze.getStartCell());
-	
+
 			/*
 			 * Generate an AIPlayer with default parameters.
 			 */
@@ -558,7 +553,7 @@ public class Application {
 					GameConstants.PLAYER2_DEFAULT_NAME,
 					GameConstants.PLAYER_PROPORTION_OF_CELL_DIMENSIONS, maze
 							.getNumCheckpoints(), reducedGraph);
-	
+
 			/*
 			 * Calls the calculatePercentageDropInWeightAfterTwoOpt method of
 			 * aiPlayer to find the percentage drop in the weight of the greedy
@@ -569,15 +564,15 @@ public class Application {
 					.calculatePercentageDropInWeightAfterTwoOpt(
 							reducedGraph.getVertex(maze.getEndCell()),
 							reducedGraph.getVertex(maze.getStartCell()));
-	
+
 			/*
-			 * If the the greedy weight is greater than the random weight, we
+			 * If the greedy weight is greater than the random weight, we
 			 * increment the relevant variable.
 			 */
 			if (percentageDropInWeightAfterTwoOpt < 0) {
 				numCasesWhereWeightIncreasesAfterTwoOpt++;
 			}
-	
+
 			/*
 			 * We add the percentage drop to the
 			 * sumOfPercentageDropsInWeightAfterTwoOpt variable so that we can
@@ -585,7 +580,7 @@ public class Application {
 			 */
 			sumOfPercentageDropsInWeightAfterTwoOpt += percentageDropInWeightAfterTwoOpt;
 		}
-	
+
 		/*
 		 * The average percentage drop in the weight of the greedy checkpoint
 		 * route from before the twoOpt method is applied to after is found by
@@ -594,7 +589,7 @@ public class Application {
 		 */
 		double averagePercentageDropInWeightAfterTwoOpt = sumOfPercentageDropsInWeightAfterTwoOpt
 				/ numTests;
-	
+
 		/*
 		 * Output the results of the test.
 		 */

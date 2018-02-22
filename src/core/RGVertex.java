@@ -1,10 +1,8 @@
-package logic;
+package core;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import map.Cell;
 
 public class RGVertex {
 	/*
@@ -22,7 +20,7 @@ public class RGVertex {
 	 * implementation to change (say, from ArrayList to LinkedList) in the
 	 * future. This is composition as the RGVertex class has a HAS-A
 	 * relationship with the RGAdjacency class and the RGAdjacency objects in
-	 * the rgdjacencies list will be destroyed if the RGVertex object is
+	 * the rgAdjacencies list will be destroyed if the RGVertex object is
 	 * destroyed.
 	 */
 	private final List<RGAdjacency> rgAdjacencies;
@@ -51,7 +49,7 @@ public class RGVertex {
 	/*
 	 * Adds an RGAdjacency object consisting of otherVertex and edge to the
 	 * rgAdjacencies list and adds an RGAdjacency object consisting of this
-	 * RGvertex object and edge to the RGAdjacencies list of OtherVertex (as
+	 * RGvertex object and edge to the rgAdjacencies list of otherVertex (as
 	 * this is effectively an undirected graph, so all adjacencies must be
 	 * two-way).
 	 */
@@ -93,7 +91,7 @@ public class RGVertex {
 	}
 
 	/*
-	 * Sets the RGEdge object connecting this RGVertexobject and adjacentVertex
+	 * Sets the RGEdge object connecting this RGVertex object and adjacentVertex
 	 * (where adjacentVertex is already connected to this object) to edge.
 	 */
 	public void setEdgeTo(RGVertex adjacentVertex, RGEdge edge) {
@@ -143,7 +141,7 @@ public class RGVertex {
 	}
 
 	/*
-	 * Returns whether Otheroertex is in an RGAdjacency object in the
+	 * Returns whether otherVertex is in an RGAdjacency object in the
 	 * rgAdjacencies list.
 	 */
 	public boolean isAdjacentTo(RGVertex otherVertex) {

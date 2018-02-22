@@ -1,4 +1,4 @@
-package map;
+package core;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -10,11 +10,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import logic.Direction;
-import logic.Entity;
-import logic.Player;
-import user_interface.Application;
 
 public class Cell extends Entity {
 	/*
@@ -31,36 +26,36 @@ public class Cell extends Entity {
 	/*
 	 * A list of Neighbouring objects consisting of a Cell object which
 	 * neighbours this Cell object and the direction of that Cell object to this
-	 * Cell object. The List interface is used rather than a concrete class such
+	 * Cell object. This is effectively an adjacency list for an unweighted,
+	 * undirected graph (the neighbouring cells graph) where the vertices are
+	 * all the Cell objects in the Cells matrix in the Maze object, and edges
+	 * exist between Cell objects if they neighbour each other (i.e. are next to
+	 * each other). The List interface is used rather than a concrete class such
 	 * as ArrayList because it separates the actual implementation of the List
 	 * interface from this class's use of the interface's methods, allowing the
 	 * implementation to change (say, from ArrayList to LinkedList) in the
-	 * future. This is effectively an adjacency list representing a graph where
-	 * the vertices are Cell objects and edges exist between vertices if the
-	 * Cell objects are neighbouring (i.e. next to each other). This is
-	 * composition as the Cell class has a HAS-A relationship with the
-	 * Neighbouring class and the Neighbouring objects in the Neighbourings list
-	 * will be destroyed if the Cell object is destroyed.This is composition as
-	 * the Cell class has a HAS-A relationship with the Neighbouring class and
-	 * the Neighbouring objects in the neighbourings list will be destroyed if
-	 * the Cell object is destroyed.
+	 * future. This is composition as the Cell class has a HAS-A relationship
+	 * with the Neighbouring class and the Neighbouring objects in the
+	 * neighbourings list will be destroyed if the Cell object is destroyed.This
+	 * is composition as the Cell class has a HAS-A relationship with the
+	 * Neighbouring class and the Neighbouring objects in the neighbourings list
+	 * will be destroyed if the Cell object is destroyed.
 	 */
 	private final List<Neighbouring> neighbourings;
 
 	/*
 	 * A list of the Cell objects which neighbour and have no wall shared with
-	 * this Cell object. The List interface is used rather than a concrete class
-	 * such as ArrayList because it separates the actual implementation of the
-	 * List interface from this class's use of the interface's methods, allowing
-	 * the implementation to change (say, from ArrayList to LinkedList) in the
-	 * future. This is effectively an adjacency list representing a graph where
-	 * the vertices are Cell objects and edges exist between vertices if the
-	 * Cell objects are adjacent to each other (i.e. neighbouring and without a
-	 * shared wall between them).The List interface is used rather than a
-	 * concrete class such as ArrayList for the same reasons as above. This is
-	 * recursive aggregation as the Cell class has a HAS-A relationship with the
-	 * Cell class but the Cell objects in the adjacentCells list will be
-	 * destroyed if the Cell object is destroyed.
+	 * this Cell object. This is effectively an adjacency list for a weighted,
+	 * undirected graph (the adjacent cells graph), where the vertices are all
+	 * of the Cell objects in the Cells matrix in the Maze object, and edges
+	 * exist between Cell objects if they are adjacent to each other (they
+	 * neighbour each other and there is no wall dividing the cells). The weight
+	 * of an edge is the weighted distance between the centres of the square
+	 * bounds of the two Cell objects connected by the edge. The List interface
+	 * is used rather than a concrete class such as ArrayList for the same
+	 * reasons as above. This is recursive aggregation as the Cell class has a
+	 * HAS-A relationship with the Cell class but the Cell objects in the
+	 * adjacentCells list will be destroyed if the Cell object is destroyed.
 	 */
 	private final List<Cell> adjacentCells;
 
@@ -73,18 +68,18 @@ public class Cell extends Entity {
 	 * The Player objects which have visited this Cell object. Used if this Cell
 	 * object is a checkpoint. The List interface is used rather than a concrete
 	 * class such as ArrayList for the same reasons as above. This is
-	 * composition as the Cell class has a HAS-A relationship with the Player
-	 * class and the Player objects in the encounteredPlayers list will be
+	 * aggregation as the Cell class has a HAS-A relationship with the Player
+	 * class but the Player objects in the encounteredPlayers list will not be
 	 * destroyed if the Cell object is destroyed.
 	 */
 	private List<Player> encounteredPlayers;
 
 	/*
 	 * The Surface of this Cell object. Changes the speed of Player objects that
-	 * move over this cell according to the SpeedMultiplier value of the Surface
-	 * enum. This is composition as the Cell class has a HAS-A relationship with
-	 * the Surface enum type and the Surface enum will be destroyed if the Cell
-	 * object is destroyed.
+	 * move over this cell according to the speedMultiplier value of the Surface
+	 * enum. This is aggregation as the Cell class has a HAS-A relationship with
+	 * the Surface enum type but the Surface enum will not be destroyed if the
+	 * Cell object is destroyed.
 	 */
 	private Surface surface;
 
@@ -161,7 +156,7 @@ public class Cell extends Entity {
 	}
 
 	/*
-	 * Adds the encounteredPlayer parameter to the EncounteredPlayers list if it
+	 * Adds the encounteredPlayer parameter to the encounteredPlayers list if it
 	 * is not already in it. If it is, returns false, otherwise returns true.
 	 */
 	public boolean addEncounteredPlayer(Player encounteredplayer) {
@@ -174,10 +169,10 @@ public class Cell extends Entity {
 
 	/*
 	 * Adds a Neighbouring object consisting of the parameters to the
-	 * Neighbourings list. Also adds a Neighbouring object consisting of this
+	 * neighbourings list. Also adds a Neighbouring object consisting of this
 	 * Cell object and the opposite direction to
-	 * DirectionFromThisCellToNeighbouringCell to the Neighbourings list of
-	 * NeighbouringCell (as this is effectively an undirected graph, so all
+	 * directionFromThisCellToNeighbouringCell to the neighbourings list of
+	 * neighbouringCell (as this is effectively an undirected graph, so all
 	 * neighbourings must be two-way).
 	 */
 	public void addNeighbouringCell(Cell neighbouringCell,
@@ -189,7 +184,7 @@ public class Cell extends Entity {
 	}
 
 	/*
-	 * Returns the direction from this Cell object to NeighbouringCell if it is
+	 * Returns the direction from this Cell object to neighbouringCell if it is
 	 * a neighbour. Otherwise returns null.
 	 */
 	public Direction getDirectionToNeighbouringCell(Cell neighbouringCell) {
@@ -229,8 +224,8 @@ public class Cell extends Entity {
 	}
 
 	/*
-	 * Adds AdjacentCell to the AdjacentCells list and adds this Cell object to
-	 * the AdjacentCells list of AdjacentCell (as this is effectively an
+	 * Adds adjacentCell to the adjacentCells list and adds this Cell object to
+	 * the adjacentCells list of adjacentCell (as this is effectively an
 	 * undirected graph, so all adjacencies must be two-way).
 	 */
 	public void setAdjacentTo(Cell adjacentCell) {
@@ -240,7 +235,7 @@ public class Cell extends Entity {
 
 	/*
 	 * Returns how many Cell objects are adjacent to this one (i.e. the size of
-	 * the AdjacentCells list).
+	 * the adjacentCells list).
 	 */
 	public int getOrder() {
 		return adjacentCells.size();
@@ -275,8 +270,8 @@ public class Cell extends Entity {
 		 * The Cell object in a random index of the neighbouringNonAdjacentCells
 		 * list is then returned.
 		 */
-		int randIndex = Application.randomNumberGenerator.nextInt(neighbouringNonAdjacentCells
-				.size());
+		int randIndex = Application.randomNumberGenerator
+				.nextInt(neighbouringNonAdjacentCells.size());
 		return neighbouringNonAdjacentCells.get(randIndex);
 	}
 
@@ -284,7 +279,8 @@ public class Cell extends Entity {
 	 * Returns a random Cell object from the adjacentCells list.
 	 */
 	public Cell getRandomAdjacentCell() {
-		int randIndex = Application.randomNumberGenerator.nextInt(adjacentCells.size());
+		int randIndex = Application.randomNumberGenerator.nextInt(adjacentCells
+				.size());
 		return adjacentCells.get(randIndex);
 	}
 
@@ -538,14 +534,16 @@ public class Cell extends Entity {
 		 */
 		return Collections.unmodifiableList(neighbourings);
 	}
-	
+
 	/*
 	 * Tests.
 	 */
-	
-	public String testID = Integer.toString((int)x) + Integer.toString((int)y);
-	
+
+	public String testID = Integer.toString((int) x)
+			+ Integer.toString((int) y);
+
 	private void renderTestID(Graphics graphics) {
-		graphics.drawString(testID, (int)(x+width/2), (int)(y+width/2));
+		graphics.drawString(testID, (int) (x + width / 2),
+				(int) (y + width / 2));
 	}
 }

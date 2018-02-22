@@ -1,16 +1,14 @@
-package logic;
+package core;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import map.Cell;
-
 public class RGEdge {
 	/*
 	 * This class is used to represent an edge (i.e. an ordered list consisting
-	 * of the two super cells on either end and the path of order-2 cells
-	 * between them) in a reduced graph.
+	 * of the two super Cell objects on either end and the shortest path of
+	 * order-2 Cell objects between them) in a reduced graph.
 	 */
 
 	/*
@@ -46,9 +44,9 @@ public class RGEdge {
 	}
 
 	/*
-	 * Adds NextCell to the end of the EdgeCells list and increases TotalWeight
-	 * by the weighted distance between the centre of NextCell and the centre of
-	 * the previous cell in the EdgeCells list.
+	 * Adds nextCell to the end of the edgeCells list and increases totalWeight
+	 * by the weighted distance between the centre of nextCell and the centre of
+	 * the previous cell in the edgeCells list.
 	 */
 	public void appendCell(Cell nextCell) {
 		edgeCells.add(nextCell);

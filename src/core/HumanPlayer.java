@@ -1,10 +1,8 @@
-package logic;
+package core;
 
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-
-import map.Cell;
 
 public class HumanPlayer extends Player {
 	/*

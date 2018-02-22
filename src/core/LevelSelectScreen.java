@@ -1,4 +1,4 @@
-package user_interface;
+package core;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -8,13 +8,10 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import map.GameConstants;
-import map.Level;
-
-public class MainMenuScreen implements Screen {
+public class LevelSelectScreen implements Screen {
 	/*
-	 * This class is the main menu screen and executes methods in response to
-	 * key presses corresponding to the menu options.
+	 * This class is for the level select screen and executes methods in
+	 * response to key presses corresponding to the menu options.
 	 */
 
 	/*
@@ -29,17 +26,24 @@ public class MainMenuScreen implements Screen {
 	 * The ScreenDisplayer object that is updating and displaying this screen.
 	 * It needs to be stored so that its SetScreen method can be used to change
 	 * the screen being displayed on it. This is aggregation as the
-	 * MainMenuScreen class has a HAS-A relationship with the ScreenDisplayer
+	 * LevelSelectScreen class has a HAS-A relationship with the ScreenDisplayer
 	 * class but the screenDisplayer object will not be destroyed if the
-	 * MainMenuScreen object is destroyed.
+	 * LevelSelect object is destroyed.
 	 */
-	private final ScreenDisplayer screenDisplayer;
+	private ScreenDisplayer screenDisplayer;
+
+	/*
+	 * The game mode that should be used to create the GameScreen object after
+	 * selecting a level.
+	 */
+	private GameMode gameMode;
 
 	/*
 	 * Constructor.
 	 */
-	public MainMenuScreen(ScreenDisplayer screenDisplayer) {
+	public LevelSelectScreen(ScreenDisplayer screenDisplayer, GameMode gameMode) {
 		this.screenDisplayer = screenDisplayer;
+		this.gameMode = gameMode;
 	}
 
 	/*
@@ -53,29 +57,47 @@ public class MainMenuScreen implements Screen {
 	 */
 	@Override
 	public void keyPressed(KeyEvent keyEvent) {
+		Level level;
 		switch (keyEvent.getKeyCode()) {
 		/*
-		 * If 1 is pressed, then a game screen against the AI should be started
-		 * and the game should start from the first level.
+		 * If a number key from 1 to 6 is pressed, the corresponding level
+		 * should be selected.
 		 */
 		case KeyEvent.VK_1:
-			screenDisplayer.setScreen(new GameScreen(screenDisplayer,
-					GameMode.AGAINST_AI, Level.ONE));
+			level = Level.ONE;
+			break;
+		case KeyEvent.VK_2:
+			level = Level.TWO;
+			break;
+		case KeyEvent.VK_3:
+			level = Level.THREE;
+			break;
+		case KeyEvent.VK_4:
+			level = Level.FOUR;
+			break;
+		case KeyEvent.VK_5:
+			level = Level.FIVE;
+			break;
+		case KeyEvent.VK_6:
+			level = Level.SIX;
 			break;
 
 		/*
-		 * If 2 or 3 is pressed, then the user must first select a level to play
-		 * so the level select screen is needed. The game mode is passed as an
-		 * argument so that once the level is selected, a game can be started
-		 * with the correct game mode.
+		 * If ESC is pressed, return to the main menu.
 		 */
-		case KeyEvent.VK_2:
-			screenDisplayer.setScreen(new LevelSelectScreen(screenDisplayer,
-					GameMode.TWO_PLAYER));
-			break;
-		case KeyEvent.VK_3:
-			screenDisplayer.setScreen(new LevelSelectScreen(screenDisplayer,
-					GameMode.TRAINING));
+		case KeyEvent.VK_ESCAPE:
+			screenDisplayer.setScreen(new MainMenuScreen(screenDisplayer));
+		default:
+			level = null;
+		}
+
+		/*
+		 * If no level is selected, then we should not start a game with a null
+		 * level, as this will cause the program to crash.
+		 */
+		if (level != null) {
+			screenDisplayer.setScreen(new GameScreen(screenDisplayer, gameMode,
+					level));
 		}
 	}
 
@@ -102,33 +124,34 @@ public class MainMenuScreen implements Screen {
 		Font lastFont = graphics.getFont();
 
 		Font menuFont = GameConstants.getMenuFont(screenDisplayer.getHeight());
-		Font titleFont = GameConstants
-				.getTitleFont(screenDisplayer.getHeight());
-
-		String titleMessage = "MazeRace";
-		String instructionsMessage = "Select a game mode (Press the key indicated in brackets): ";
+		String instructionsMessage = "Select a level (Press the key indicated in brackets): ";
 
 		/*
 		 * An ArrayList is used to store the game mode options because it makes
 		 * it easier to iterate over them, which is required below.
 		 */
-		List<String> gameModeMessages = new ArrayList<String>();
-		gameModeMessages.add("[1] Against AI");
-		gameModeMessages.add("[2] Two Player");
-		gameModeMessages.add("[3] Training");
+		List<String> levelMessages = new ArrayList<String>();
+		levelMessages.add("[1] Level One");
+		levelMessages.add("[2] Level Two");
+		levelMessages.add("[3] Level Three");
+		levelMessages.add("[4] Level Four");
+		levelMessages.add("[5] Level Five");
+		levelMessages.add("[6] Level Six");
+
+		String exitMessage = "Press: [ESC] to exit to main menu";
 
 		/*
-		 * This block of code iterates through gameModeMessages and selects the
+		 * This block of code iterates through levelMessages and selects the
 		 * string that has the largest width when displayed on screen with the
 		 * font menuFont. This width is then used to determine the position of
-		 * all the game mode strings on the screen so that they can all be
+		 * all the level strings on the screen so that they can all be
 		 * left-aligned and centered with respect to the largest width string
 		 * (so that the menu looks balanced).
 		 */
 		FontMetrics menuFontMetrics = graphics.getFontMetrics(menuFont);
 		int maxWidth = 0;
-		for (String gameModeMessage : gameModeMessages) {
-			int width = menuFontMetrics.stringWidth(gameModeMessage);
+		for (String levelMessage : levelMessages) {
+			int width = menuFontMetrics.stringWidth(levelMessage);
 			if (width > maxWidth) {
 				maxWidth = width;
 			}
@@ -140,37 +163,32 @@ public class MainMenuScreen implements Screen {
 		 */
 		graphics.drawImage(GameConstants.MENU_BACKGROUND_IMAGE, 0, 0,
 				screenDisplayer.getWidth(), screenDisplayer.getHeight(), null);
-		/*
-		 * Draws the title string in the desired position with the font
-		 * titleFont and the desired title text colour.
-		 */
-		graphics.setColor(GameConstants.TITLE_TEXT_COLOR);
-		graphics.setFont(titleFont);
-		graphics.drawString(
-				titleMessage,
-				(screenDisplayer.getWidth() - graphics
-						.getFontMetrics(titleFont).stringWidth(titleMessage)) / 2,
-				screenDisplayer.getHeight() / (gameModeMessages.size() + 3));
 
 		/*
-		 * This block of code draws the instruction string and iterates over
-		 * gameModeMessages and draws the game mode option strings in their
-		 * desired positions with the font menuFont and the desired menu text
-		 * colour.
+		 * This block of code draws the instruction string, exit option, and
+		 * iterates over levelMessages and draws the level option strings in
+		 * their desired positions with the font menuFont and the desired menu
+		 * text colour.
 		 */
+
 		graphics.setColor(GameConstants.MENU_TEXT_COLOR);
 		graphics.setFont(menuFont);
 		graphics.drawString(instructionsMessage,
-				(screenDisplayer.getWidth() - graphics.getFontMetrics(menuFont)
+				(screenDisplayer.getWidth() - menuFontMetrics
 						.stringWidth(instructionsMessage)) / 2,
-				2 * screenDisplayer.getHeight() / (gameModeMessages.size() + 3));
-		for (int i = 0; i < gameModeMessages.size(); i++) {
+				screenDisplayer.getHeight() / (levelMessages.size() + 3));
+		for (int i = 0; i < levelMessages.size(); i++) {
 			graphics.drawString(
-					gameModeMessages.get(i),
+					levelMessages.get(i),
 					(screenDisplayer.getWidth() - maxWidth) / 2,
-					(i + 3) * screenDisplayer.getHeight()
-							/ (gameModeMessages.size() + 3));
+					(i + 2) * screenDisplayer.getHeight()
+							/ (levelMessages.size() + 3));
 		}
+		graphics.drawString(exitMessage,
+				(screenDisplayer.getWidth() - menuFontMetrics
+						.stringWidth(exitMessage)) / 2,
+				(levelMessages.size() + 2) * screenDisplayer.getHeight()
+						/ (levelMessages.size() + 3));
 
 		graphics.setFont(lastFont);
 		graphics.setColor(lastColor);

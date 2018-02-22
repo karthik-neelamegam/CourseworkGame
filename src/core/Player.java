@@ -1,9 +1,7 @@
-package logic;
+package core;
 
 import java.awt.Color;
 import java.awt.Graphics;
-
-import map.Cell;
 
 public abstract class Player extends Entity {
 	/*
@@ -41,19 +39,25 @@ public abstract class Player extends Entity {
 	private final double toleranceConstant;
 
 	/*
-	 * The Cell object that the player is currently occupying.
+	 * The Cell object that the player is currently occupying. This is
+	 * aggregation as the Player class has a HAS-A relationship with the Cell
+	 * class but the currentCell object will not be destroyed if the Player
+	 * object is destroyed.
 	 */
 	protected Cell currentCell;
 
 	/*
-	 * The Cell object that the player is meant to end up at.
+	 * The Cell object that the player is meant to end up at. This is
+	 * aggregation as the Player class has a HAS-A relationship with the Cell
+	 * class but the endCell object will not be destroyed if the Player object
+	 * is destroyed.
 	 */
 	private final Cell endCell;
 
 	/*
 	 * The direction that the player is currently moving in. This is aggregation
 	 * as the Player class has a HAS-A relationship with the Direction enum type
-	 * but the CurrentDirection object will not be destroyed if the Player
+	 * but the currentDirection object will not be destroyed if the Player
 	 * object is destroyed.
 	 */
 	protected Direction currentDirection;
@@ -61,7 +65,7 @@ public abstract class Player extends Entity {
 	/*
 	 * The direction that the player wants to move in but cannot yet (because a
 	 * wall is in the way). This is aggregation as the Player class has a HAS-A
-	 * relationship with the Direction enum type but the QueuedDirection object
+	 * relationship with the Direction enum type but the queuedDirection object
 	 * will not be destroyed if the Player object is destroyed.
 	 */
 	private Direction queuedDirection;
@@ -73,12 +77,12 @@ public abstract class Player extends Entity {
 	private final double playerProportionOfCellDimensions;
 
 	/*
-	 * The number of checkpoint cells that the player has visited so far.
+	 * The number of checkpoint Cell objects that the player has visited so far.
 	 */
 	private int numCheckpointsReached;
 
 	/*
-	 * The number of checkpoint cells in the maze.
+	 * The number of checkpoint Cell objects in the maze.
 	 */
 	private final int numCheckpointsToReach;
 
@@ -173,7 +177,7 @@ public abstract class Player extends Entity {
 								* currentCell.getWidth()) {
 
 					/*
-					 * This causes the player to ”jump” a small distance
+					 * This causes the player to "jump" a small distance
 					 * horizontally so that it is fully within its current Cell
 					 * object and so can change direction without its body
 					 * moving through a wall corner
@@ -207,7 +211,7 @@ public abstract class Player extends Entity {
 								* currentCell.getHeight()) {
 
 					/*
-					 * This causes the player to ”jump” a small distance
+					 * This causes the player to "jump" a small distance
 					 * vertically so that it is fully within its current Cell
 					 * object and so can change direction without its body
 					 * moving through a wall corner
@@ -221,7 +225,7 @@ public abstract class Player extends Entity {
 				/*
 				 * If the y-coordinate of the player are not within the
 				 * tolerable bounds, then the player cannot change direction
-				 * (yet), so TargetDirection is queued.
+				 * (yet), so targetDirection is queued.
 				 */
 				else {
 					queuedDirection = targetDirection;
@@ -311,8 +315,8 @@ public abstract class Player extends Entity {
 	}
 
 	/*
-	 * Checks if the player has visited an unvisited checkpoint and increments
-	 * the NumCheckpointsReached variable by 1 if it has.
+	 * Checks if the player has visited an unvisited checkpoint Cell object and
+	 * increments the numCheckpointsReached variable by 1 if it has.
 	 */
 	private void checkCheckpoint() {
 		if (currentCell.isCheckpoint()) {
@@ -366,7 +370,7 @@ public abstract class Player extends Entity {
 		 * object is used again.
 		 */
 		Color lastColor = g.getColor();
-		
+
 		/*
 		 * Draws the coloured circle representing the player.
 		 */
@@ -376,7 +380,7 @@ public abstract class Player extends Entity {
 				* (1 - playerProportionOfCellDimensions) / 2),
 				(int) (width * playerProportionOfCellDimensions),
 				(int) (height * playerProportionOfCellDimensions));
-		
+
 		/*
 		 * Draws the outline of the circle.
 		 */
@@ -386,7 +390,7 @@ public abstract class Player extends Entity {
 				* (1 - playerProportionOfCellDimensions) / 2),
 				(int) (width * playerProportionOfCellDimensions),
 				(int) (height * playerProportionOfCellDimensions));
-		
+
 		g.setColor(lastColor);
 	}
 

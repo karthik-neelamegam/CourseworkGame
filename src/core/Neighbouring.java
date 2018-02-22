@@ -1,27 +1,25 @@
-package map;
+package core;
 
-import logic.Direction;
 
 public class Neighbouring {
 	/*
 	 * This class is essentially a container storing two variables: a
-	 * neighbouring Cell object and the direction to it from the Cell object
+	 * neighbouring Cell object and the direction to it from the parent Cell object
 	 * where this Neighbouring object would have been created and stored.
 	 */
 
 	/*
 	 * The neighbouring Cell object. This is aggregation as the Neighbouring
 	 * class has a HAS-A relationship with the Cell class but the
-	 * NeighbouringCell object will not be destroyed if the Neighbouring object
+	 * neighbouringCell object will not be destroyed if the Neighbouring object
 	 * is destroyed.
 	 */
 	private final Cell neighbouringCell;
 
 	/*
-	 * The direction to NeighbouringCell from the Cell object where this
-	 * Neighbouring object would have been created and stored. This is
+	 * The direction to neighbouringCell from the parent Cell object. This is
 	 * aggregation as the Neighbouring class has a HAS-A relationship with the
-	 * Direction enum type but the DirectionToNeighbouringCell enum will not be
+	 * Direction enum type but the directionToNeighbouringCell enum will not be
 	 * destroyed if the Neighbouring object is destroyed.
 	 */
 	private final Direction directionToNeighbouringCell;

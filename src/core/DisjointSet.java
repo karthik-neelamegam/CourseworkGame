@@ -1,4 +1,4 @@
-package dsa;
+package core;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,8 +10,8 @@ public class DisjointSet<T> {
 	 * of elements split up into subsets that do not have elements in common
 	 * (i.e. disjoint subsets). The purpose of using such a data structure is to
 	 * be able to efficiently check if two elements are in the same subset (the
-	 * AreJoined function) and to efficiently combine two subsets together (the
-	 * Join function).
+	 * areJoined function) and to efficiently combine two subsets together (the
+	 * join function).
 	 */
 
 	private class TreeVertex {
@@ -67,7 +67,7 @@ public class DisjointSet<T> {
 				 * the same tree, and so all of these objects can be attached
 				 * directly under the root (i.e. the root can be made the parent
 				 * of all of these objects). This makes the tree flatter, which
-				 * increases the efficiency of future FindRoot operations as the
+				 * increases the efficiency of future findRoot operations as the
 				 * recursion depth would be smaller. This idea is called path
 				 * compression.
 				 */
@@ -78,16 +78,16 @@ public class DisjointSet<T> {
 		}
 
 		/*
-		 * Joins the trees that this TreeVertex object and OtherVertex are in.
+		 * Joins the trees that this TreeVertex object and otherVertex are in.
 		 */
-		public void join(TreeVertex other) {
+		public void join(TreeVertex otherVertex) {
 
 			/*
 			 * The roots of the trees that this TreeVertex object and
-			 * OtherVertex are in.
+			 * otherVertex are in.
 			 */
 			TreeVertex thisRoot = findRoot();
-			TreeVertex otherRoot = other.findRoot();
+			TreeVertex otherRoot = otherVertex.findRoot();
 
 			/*
 			 * If the two TreeVertex objects are in the same tree (i.e. if their
@@ -145,7 +145,7 @@ public class DisjointSet<T> {
 	public DisjointSet(Collection<T> items) {
 		itemsToVerticesMap = new HashMap<T, TreeVertex>();
 		for (T item : items) {
-			add(item);
+			itemsToVerticesMap.put(item, new TreeVertex());
 		}
 	}
 
@@ -159,7 +159,7 @@ public class DisjointSet<T> {
 
 	/*
 	 * Creates a TreeVertex object for the item parameter and puts a
-	 * corresponding entry in the ItemsToVerticesMap hash table.
+	 * corresponding entry in the itemsToVerticesMap hash table.
 	 */
 	public void add(T item) {
 		itemsToVerticesMap.put(item, new TreeVertex());
@@ -174,7 +174,7 @@ public class DisjointSet<T> {
 	}
 
 	/*
-	 * Checks if the TreeVertex objects reprenting the parameters are in the
+	 * Checks if the TreeVertex objects representing the parameters are in the
 	 * same trees (i.e. have the same roots). See the findRoot method in the
 	 * TreeVertex class.
 	 */

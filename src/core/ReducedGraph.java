@@ -1,4 +1,4 @@
-package logic;
+package core;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import map.Cell;
-
 public class ReducedGraph {
 	/*
 	 * This class generates and stores a reduced graph representing a cell-based
 	 * maze, where vertices (RGVertex objects) are "super" Cell objects
 	 * (junction/checkpoint/order-1 Cell objects) and edges (RGEdge objects) are
-	 * paths of order-2 adjacent Cell objects connecting two super Cell objects.
+	 * the shortest paths of order-2 adjacent Cell objects connecting two super
+	 * Cell objects. The weight of an edge (an RGEdge object) is the total
+	 * weighted distance of the path of order-2 Cell objects represented by the
+	 * RGEdge object.
 	 */
 
 	/*
@@ -39,7 +40,7 @@ public class ReducedGraph {
 	 * The RGVertex objects of the reduced graph that represent super Cell
 	 * objects that are checkpoints (checkpoint Cell objects). This is
 	 * composition as the ReducedGraph class has a HAS-A relationship with the
-	 * RGVertex class and the RGVertex objects in the CheckpointVertices list
+	 * RGVertex class and the RGVertex objects in the checkpointVertices list
 	 * will be destroyed if the ReducedGraph object is destroyed.
 	 */
 	private final List<RGVertex> checkpointVertices;
@@ -74,7 +75,7 @@ public class ReducedGraph {
 	 * populates the cellsToVerticesMap hash table with all the super Cell
 	 * objects and their corresponding RGVertex objects. Adjacencies between
 	 * RGVertex objects are found and set up as well. Populates the
-	 * CheckpointVertices set with RGVertex objects of super Cell objects that
+	 * checkpointVertices list with RGVertex objects of super Cell objects that
 	 * are checkpoints.
 	 */
 	private void reduceGraph(Set<Cell> visitedCells, RGVertex currentVertex) {

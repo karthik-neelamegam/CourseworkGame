@@ -1,4 +1,4 @@
-package user_interface;
+package core;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -9,21 +9,11 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
-import logic.AIPlayer;
-import logic.HumanPlayer;
-import logic.Player;
-import logic.ReducedGraph;
-import map.GameConstants;
-import map.Level;
-import map.Maze;
-import map.MazeType;
-import map.Surface;
-
 public class GameScreen implements Screen {
 	/*
-	 * This class is the screen in which the actual game is played.
+	 * This class is for the screen in which the actual game is played.
 	 */
-	
+
 	/*
 	 * This class implements the Screen interface. The update and render
 	 * abstract methods need to be implemented (polymorphism). These will need
@@ -43,16 +33,16 @@ public class GameScreen implements Screen {
 	private final ScreenDisplayer screenDisplayer;
 
 	/*
-	 * The game mode being played. This is composition as the GameScreen class
-	 * has a HAS-A relationship with the GameMode enum type and the gameMode
-	 * enum will be destroyed if the GameScreen object is destroyed.
+	 * The game mode being played. This is aggregation as the GameScreen class
+	 * has a HAS-A relationship with the GameMode enum type but the gameMode
+	 * enum will not be destroyed if the GameScreen object is destroyed.
 	 */
 	private final GameMode gameMode;
 
 	/*
-	 * The level being played. This is composition as the GameScreen class has a
-	 * HAS-A relationship with the Level enum type and the currentLevel enum
-	 * will be destroyed if the GameScreen object is destroyed.
+	 * The level being played. This is aggregation as the GameScreen class has a
+	 * HAS-A relationship with the Level enum type but the currentLevel enum
+	 * will not be destroyed if the GameScreen object is destroyed.
 	 */
 	private Level currentLevel;
 
@@ -158,7 +148,7 @@ public class GameScreen implements Screen {
 		 * respect to memory and iteration time complexity.
 		 */
 		players = new ArrayList<Player>();
-		
+
 		int numCheckpoints = maze.getNumCheckpoints();
 		double humanPlayerBaseVel = maze.getCellSideLength()
 				* GameConstants.PLAYER_BASE_VELOCITY_PROPORTION_OF_CELL_DIMENSIONS;
@@ -239,7 +229,7 @@ public class GameScreen implements Screen {
 	 */
 
 	/*
-	 * Calls the KeyPressed method of the HumanPlayer objects in Players. If ESC
+	 * Calls the keyPressed method of the HumanPlayer objects in Players. If ESC
 	 * is pressed, flips the paused variable. If the game is paused or if the
 	 * round is over, executes methods to carry out the actions represented by
 	 * the given options.
@@ -502,7 +492,7 @@ public class GameScreen implements Screen {
 	/*
 	 * Renders an overlay (e.g. a pause overlay or a round-over overlay) with a
 	 * given information message and an instructions message, telling the user
-	 * what to do next.
+	 * what to do next. This prevents the need for pop-ups.
 	 */
 	private void renderOverlay(Graphics g, String informationMessage,
 			String instructionsMessage) {

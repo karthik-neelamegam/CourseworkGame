@@ -1,4 +1,4 @@
-package map;
+package core;
 
 public enum MazeType {
 	

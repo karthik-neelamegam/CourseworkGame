@@ -1,4 +1,4 @@
-package user_interface;
+package core;
 
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
@@ -11,16 +11,16 @@ public interface Screen {
 	 */
 
 	/*
-	 * Called every loop cycle in the game loop. Updates the variables that need
+	 * Called every game cycle in the game loop. Updates the variables that need
 	 * to be updated every cycle.
 	 */
 	public void update();
 
 	/*
-	 * Called every loop cycle in the game loop. Draws the display using the
-	 * Graphics object.
+	 * Called every game cycle in the game loop. Draws the display using the
+	 * graphics object.
 	 */
-	public void render(Graphics g);
+	public void render(Graphics graphics);
 
 	/*
 	 * Called when a key is pressed.

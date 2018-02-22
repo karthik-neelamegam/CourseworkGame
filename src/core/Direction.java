@@ -1,4 +1,4 @@
-package logic;
+package core;
 
 public enum Direction {
 	/*
@@ -9,8 +9,8 @@ public enum Direction {
 	UP, DOWN, RIGHT, LEFT;
 
 	/*
-	 * Returns the opposite Direction constant (self-explanatory) for each of
-	 * the four cases.
+	 * Returns the opposite Direction enum (self-explanatory) for each of the
+	 * four cases.
 	 */
 	public Direction getOpposite() {
 		Direction opposite = null;

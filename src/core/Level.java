@@ -1,4 +1,4 @@
-package map;
+package core;
 
 import java.util.EnumMap;
 
@@ -8,7 +8,8 @@ public enum Level {
 	 * game. The name of the Level constant refers to its position in the level
 	 * progression when playing against the AI.
 	 */
-	ONE(5, 5, 5, MazeType.KRUSKAL, 0, new EnumMap<Surface, Double>(Surface.class) {
+	ONE(5, 5, 5, MazeType.KRUSKAL, 0, new EnumMap<Surface, Double>(
+			Surface.class) {
 		{
 			put(Surface.SLOW, 5d);
 			put(Surface.NORMAL, 90d);
@@ -24,7 +25,8 @@ public enum Level {
 	}), THREE(10, 10, 10, MazeType.KRUSKAL, 0.2, new EnumMap<Surface, Double>(
 			Surface.class) {
 		{
-			put(Surface.SLOW, 15d);
+			put(Surface.SLOW, 
+					15d);
 			put(Surface.NORMAL, 70d);
 			put(Surface.FAST, 15d);
 		}
@@ -75,7 +77,9 @@ public enum Level {
 	/*
 	 * The style of maze for this level (i.e. either one generated using
 	 * depth-first search generated maze or one generated using randomised
-	 * Kruskal’s algorithm).
+	 * Kruskal’s algorithm). This is aggregation as the Level enum type has a
+	 * HAS-A relationship with the MazeType enum type but the mazeType enum will
+	 * not be destroyed if the Level enum is destroyed.
 	 */
 	private final MazeType mazeType;
 
@@ -84,9 +88,9 @@ public enum Level {
 	 * come up in the maze. The greater the Double value associated with a
 	 * particular Surface key in the map, the more likely it is to occur in the
 	 * maze. Java's EnumMap class is used because it is more efficient than
-	 * HashMap when enums are used as the keys. This is because Enum maps
-	 * are represented internally as arrays, making it a very compact and
-	 * efficient representation.
+	 * HashMap when enums are used as the keys. This is because Enum maps are
+	 * represented internally as arrays, making it a very compact and efficient
+	 * representation.
 	 */
 	private final EnumMap<Surface, Double> surfaceRatios;
 
@@ -106,12 +110,12 @@ public enum Level {
 	}
 
 	/*
-	 * Returns the Level enum that represents the next level after this
-	 * one. If this is the final level, then returns Null. A switch case
-	 * statement is used to deal with the individual Level constants rather than
-	 * exploiting the natural ordering of the enum constants. This is because it
-	 * means that whenever a new Level constant is added, care must be given to
-	 * which levels it comes after and before.
+	 * Returns the Level enum that represents the next level after this one. If
+	 * this is the final level, then returns Null. A switch case statement is
+	 * used to deal with the individual Level constants rather than exploiting
+	 * the natural ordering of the enum constants. This is because it means that
+	 * whenever a new Level constant is added, care must be given to which
+	 * levels it comes after and before.
 	 */
 	public Level getNextLevel() {
 		Level nextLevel;

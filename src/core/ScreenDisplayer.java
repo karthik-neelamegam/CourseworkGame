@@ -1,4 +1,4 @@
-package user_interface;
+package core;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -10,15 +10,17 @@ import javax.swing.JPanel;
 
 public class ScreenDisplayer extends JPanel implements KeyListener {
 	/*
-	 * This class will update and display a screen, where a screen is something
-	 * (e.g. a main menu screen or a game screen) displayed using a window.
+	 * This class will update and display an object implementing the Screen
+	 * interface. A screen is something (e.g. a main menu screen or a game
+	 * screen) displayed using a window.
 	 */
 
 	/*
 	 * This class extends JPanel (inheritance), which is a class in Java's Swing
-	 * library. The paintComponent method is inherited, which handles the lower
-	 * level aspects of drawing to a GUI panel. The addKeyListener method is
-	 * also inherited, allowing key actions to be detected.
+	 * library. The paintComponent method is inherited and overriden
+	 * (polymorphism), which handles the lower level aspects of drawing to a GUI
+	 * panel. The addKeyListener method is also inherited, allowing key actions
+	 * to be detected.
 	 */
 
 	/*
@@ -29,10 +31,10 @@ public class ScreenDisplayer extends JPanel implements KeyListener {
 	 */
 
 	/*
-	 * The screen that is currently being updated and displayed. This is
-	 * composition as the ScreenDisplayer class has a HAS-A relationship with
-	 * the Screen interface and the currentScreen object will be destroyed if
-	 * the ScreenDisplayer object is destroyed.
+	 * The Screen object that is currently being updated and displayed. This is
+	 * aggregation as the ScreenDisplayer class has a HAS-A relationship with
+	 * the Screen interface but the currentScreen object will not be destroyed
+	 * if the ScreenDisplayer object is destroyed.
 	 */
 	private Screen currentScreen;
 
@@ -60,15 +62,16 @@ public class ScreenDisplayer extends JPanel implements KeyListener {
 
 		/*
 		 * Allows the panel to be focused on (by clicking on it), after which
-		 * key actions are listened for.
+		 * key actions are listened for. This method is Inherited from JPanel.
 		 */
 		setFocusable(true);
 
 		/*
-		 * This method adds this ScreenDisplayer object (which implements
-		 * KeyListener) as a KeyListener for the underlying JPanel (which this
-		 * class extends), allowing the keyPressed, keyReleased, and keyTyped
-		 * methods in this class to actually be called when key actions occur.
+		 * This method is inherited from JPanel and adds this ScreenDisplayer
+		 * object (which implements KeyListener) as a KeyListener for the
+		 * underlying JPanel (which this class extends), allowing the
+		 * keyPressed, keyReleased, and keyTyped methods in this class to
+		 * actually be called when key actions occur.
 		 */
 		addKeyListener(this);
 
@@ -101,7 +104,7 @@ public class ScreenDisplayer extends JPanel implements KeyListener {
 	/*
 	 * While the game is running, updates and displays currentScreen a fixed
 	 * number of times a second, equal to the constructor parameter
-	 * DesiredGameLoopCycleFrequency, in order to keep the speed of the gameplay
+	 * desiredGameLoopCycleFrequency, in order to keep the speed of the gameplay
 	 * consistent regardless of how fast the user’s computer is (unless it is
 	 * extremely slow, in which case the game would not be enjoyable anyway).
 	 */
@@ -257,6 +260,12 @@ public class ScreenDisplayer extends JPanel implements KeyListener {
 	 * Setters.
 	 */
 
+	/*
+	 * The Screen object being updated and displayed is changed by using this
+	 * method. Allows transitions between the different screens in the game
+	 * (e.g. changing from MainMenuScreen to GameScreen will involve calling the
+	 * SetScreen method and passing GameScreen as a parameter).
+	 */
 	public void setScreen(Screen nextScreen) {
 		currentScreen = nextScreen;
 	}
